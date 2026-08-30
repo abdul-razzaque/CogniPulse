@@ -155,14 +155,19 @@ class CogniPulseBrain:
             response_text = llm_response
         else:
             # Fallback to Autonomous Multi-Tier Synthesizer
-            raw_response, search_info = self._synthesize_with_live_search(core_subject, recalled, subgraph)
-            response_text = self.multilingual.translate_response_to_target_language(raw_response, detected_lang)
+            if search_result and search_result.get("summary"):
+                raw_response = search_result["summary"]
+            else:
+                raw_response, search_info = self._synthesize_with_live_search(core_subject, recalled, subgraph)
+
+            response_text = self.multilingual.translate_response_to_target_language(raw_response, detected_lang, original_query=query_clean)
 
             thought_stream.append({
                 "stage": "SYNTHESIS",
                 "message": f"Synthesized response in {detected_lang.upper().replace('_', ' ')} with synaptic consolidation.",
                 "timestamp": time.time()
             })
+
 
         # Step 5: Memory Consolidation
 
