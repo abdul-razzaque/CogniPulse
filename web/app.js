@@ -458,8 +458,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const formattedText = formatMarkdown(responseContent);
 
     row.innerHTML = `
-      <div class="ai-avatar"><i data-lucide="brain-circuit"></i></div>
+      <div class="ai-avatar"><img src="logo.svg" alt="CogniPulse" style="width:100%; height:100%; object-fit:contain;"></div>
       <div class="ai-body">
+
         
         <!-- Thought Process Accordion -->
         <div class="thought-accordion">
