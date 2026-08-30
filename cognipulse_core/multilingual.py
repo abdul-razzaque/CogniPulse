@@ -17,34 +17,105 @@ TOKENS_TO_REMOVE = {
     'can', 'you', 'explain', 'give', 'information', 'info', 'on', 'please', 'plz'
 }
 
-
-PHRASE_TRANSLATIONS = [
-    (r'\bis the study of\b', 'ka mutala (study) hai'),
-    (r'\bis the intersection of\b', 'ka mushtarka shoba (intersection) hai'),
-    (r'\bis a branch of\b', 'ki aik ahem shaakh (branch) hai'),
-    (r'\bis a subfield of\b', 'ka aik zaili shoba hai'),
-    (r'\bis defined as\b', 'ko is tarha bayan kiya jata hai k'),
-    (r'\bis an interdisciplinary field\b', 'aik mushtarka bain-ul-shobajati field hai'),
-    (r'\bcombines\b', 'milata hai'),
-    (r'\bwhich combines\b', 'jo aapas mein jodta hai'),
-    (r'\buses\b', 'istemal karta hai'),
-    (r'\bused for\b', 'k liye istemal hota hai'),
-    (r'\bused to\b', 'k liye istemal kiya jata hai'),
-    (r'\bfocuses on\b', 'par tawajjah markooz karta hai'),
-    (r'\binvolves\b', 'shamil karta hai'),
-    (r'\bessential for\b', 'k liye nihayat zaroori hai'),
-    (r'\bsuch as\b', 'jese k'),
-    (r'\bfor example\b', 'maslan'),
-    (r'\bincluding\b', 'bashamool'),
-    (r'\bknown as\b', 'k tor par jana jata hai'),
-    (r'\bdeveloped by\b', 'ne develop / ijaad kiya'),
-    (r'\bplays a key role in\b', 'mein ahem kirdar ada karta hai'),
-    (r'\bhelps in\b', 'mein madad deta hai'),
-    (r'\ballows\b', 'ijazat deta hai'),
-    (r'\baims to\b', 'ka maqsad hai'),
-    (r'\brefers to\b', 'se murad hai'),
-    (r'\bconsists of\b', 'par mushtamil hai')
-]
+# Rich Handcrafted Roman Urdu Knowledge Base for Common Technical/Science Subjects
+ROMAN_URDU_KNOWLEDGE: Dict[str, Dict[str, Any]] = {
+    "bioinformatics": {
+        "title": "Bioinformatics Kya Hai?",
+        "def": "**Bioinformatics** aik ahem shoba hai jo **Biology (Hayatyaat)**, **Computer Science**, aur **Data Analytics** ko aapas mein jodta hai taa-kay biological data (jese DNA, Genes, aur Proteins) ko computer algorithms k zariye samjha aur analyze kiya ja sakay.",
+        "points": [
+            "**DNA aur Genetic Sequencing:** Insani DNA aur genes k complex patterns ko software tools k zariye decode karna.",
+            "**Bimariyon ki Tashkhees:** Cancer aur deegar genetic beemariyon ki bunyadi wajohat daryaft karna.",
+            "**Nayi Dawaiyon ki Tayari (Drug Discovery):** Molecular modeling aur simulations k zariye behtar medicines design karna.",
+            "**Biological Databases:** Dunya bhar k biological research data ko store aur search karnay k liye computational systems banana."
+        ],
+        "summary": "Mukhtasaran, Bioinformatics computer aur programming ki taqat ko istemal kar k tibb (medicine) aur biological science k mushkil tareen maslay hal karta hai."
+    },
+    "computer science": {
+        "title": "Computer Science (CS) ka Taaruf",
+        "def": "**Computer Science (CS)** computer systems, computation theory, algorithms, programming languages, aur software/hardware architecture ka scientific mutala (study) hai.",
+        "points": [
+            "**Software Development:** Web, mobile apps, aur operating systems design aur code karna.",
+            "**Artificial Intelligence & ML:** Smart algorithms banana jo data se khud seekhein.",
+            "**Data Structures & Algorithms:** Masail ko kam se kam waqt aur memory mein hal karna.",
+            "**Cybersecurity & Networks:** Digital data aur networks ko hackers se mehfooz rakhna."
+        ],
+        "summary": "Computer Science modern dunya ki technology, automation, aur digital transformation ki bunyad hai."
+    },
+    "artificial intelligence": {
+        "title": "Artificial Intelligence (AI) Kya Hai?",
+        "def": "**Artificial Intelligence (AI)** computer science ki wo shaakh hai jo machines aur software ko insani zehant (human intelligence) ki tarha sochny, seekhny, aur faislay karnay k qabil banati hai.",
+        "points": [
+            "**Machine Learning (ML):** Data se khud ba khud patterns aur predictions seekhna.",
+            "**Natural Language Processing (NLP):** Insani zuban ko samajhna aur ChatGPT/Claude ki tarha baat karna.",
+            "**Computer Vision:** Tasweeron aur videos ko pehchanna (jese self-driving cars).",
+            "**Robotics & Automation:** Mushkil aur khatarnak kaamon ko khud-kaar tareeqay se anjam dena."
+        ],
+        "summary": "AI ka maqsad insani salahiyaton ko barhana aur rozmarrah k mushkil tareen kaamon ko automated banana hai."
+    },
+    "machine learning": {
+        "title": "Machine Learning (ML) ka Khulasa",
+        "def": "**Machine Learning (ML)** AI ka aik hissa hai jis mein computers ko baghair explicit programming k data aur tajarbay (experience) se khud ba khud seekhna aur behtar hona sikhaya jata hai.",
+        "points": [
+            "**Supervised Learning:** Labeled data se seekh kar nayi cheezon ki peshan-goi (prediction) karna.",
+            "**Unsupervised Learning:** Baghair labels k data mein chuppay patterns daryaft karna.",
+            "**Reinforcement Learning:** Reward aur penalty k zariye behtareen faislay lena."
+        ],
+        "summary": "ML aaj ki dunya mein recommendations (YouTube/Netflix), fraud detection, aur AI models ki jaan hai."
+    },
+    "data science": {
+        "title": "Data Science Kya Hai?",
+        "def": "**Data Science** baray data sets (Big Data) se mufeed maloomat (insights), patterns, aur trends nikalnay ka ilm hai, jis mein statistics, programming, aur business knowledge istemal hoti hai.",
+        "points": [
+            "**Data Cleaning & Mining:** Raw data ko saaf aur structured banana.",
+            "**Data Visualization:** Graphs aur charts k zariye trends ko wazeh karna.",
+            "**Predictive Analytics:** Mustaqbil k trends ka andaza lagana."
+        ],
+        "summary": "Data Science har baray idaray aur business ko behtar faislay lenay mein madad deta hai."
+    },
+    "cyber security": {
+        "title": "Cyber Security Kya Hai?",
+        "def": "**Cyber Security** computers, servers, mobile devices, electronic systems, networks, aur data ko malicious attacks (hackers) se bachane ki technology aur practice hai.",
+        "points": [
+            "**Network Security:** Internet networks ko unauthorized access se bachana.",
+            "**Information Security:** Sensitive data ki privacy aur integrity ko mehfooz rakhna.",
+            "**Ethical Hacking:** Systems ki kamzoriyan (vulnerabilities) daryaft kar k unhein theek karna."
+        ],
+        "summary": "Digital dunya mein personal data, bank accounts aur idaron ki hifazat k liye Cyber Security lazmi hai."
+    },
+    "physics": {
+        "title": "Physics (Ilm-e-Tabiyat) ka Taaruf",
+        "def": "**Physics** science ki wo bunyadi shaakh hai jis mein maddah (matter), tawanai (energy), waqt (time), harkat (motion), aur qudrat k qawaneen ka mutala kiya jata hai.",
+        "points": [
+            "**Classical Mechanics:** Ashya ki harkat aur forces ka mutala (Newton ke qawaneen).",
+            "**Electromagnetism:** Bijli (electricity) aur maqnatees (magnetism) k asool.",
+            "**Quantum Mechanics:** Atom aur sub-atomic particles ki ajeeb-o-ghareeb dunya.",
+            "**Thermodynamics:** Hararat (heat) aur energy transformation k asool."
+        ],
+        "summary": "Physics humein yeh samajhnay mein madad deti hai k hamari kainaat kis tarha kaam karti hai."
+    },
+    "chemistry": {
+        "title": "Chemistry (Ilm-e-Keemiya) ka Taaruf",
+        "def": "**Chemistry** maddah (matter) ki saakht (structure), khusoosiyat (properties), aur doosray mawaad k sath mil kar honay walay chemical reactions ka mutala hai.",
+        "points": [
+            "**Organic Chemistry:** Carbon par mushtamil compounds ka mutala.",
+            "**Inorganic Chemistry:** Maadniyat aur metals ka mutala.",
+            "**Biochemistry:** Zinda ashya (living organisms) mein chemical processes.",
+            "**Physical Chemistry:** Chemical systems mein physics k asoolon ka itlaaq."
+        ],
+        "summary": "Chemistry dawaiyon, plastic, fertilizer, aur rozmarrah k istemal ki cheezon ki tayari ki bunyad hai."
+    },
+    "biology": {
+        "title": "Biology (Ilm-e-Hayatyaat) ka Taaruf",
+        "def": "**Biology** zindah ashya (living organisms), unki saakht (structure), afzaish (growth), function, aur mahaul k sath unke taluq ka scientific mutala hai.",
+        "points": [
+            "**Cell Biology:** Zindagi ki bunyadi ikai (Cell) ka mutala.",
+            "**Genetics:** Wirsat (heredity) aur genes ka mutala.",
+            "**Ecology:** Jaan-daron ka unke qudrati mahaul k sath taluq.",
+            "**Physiology:** Insani aur hewani jism k aaza k kaam karnay ka tareeqa."
+        ],
+        "summary": "Biology humein insani sehat, beemariyon k ilaj, aur qudrati dunya ki hifazat samajhnay mein madad deti hai."
+    }
+}
 
 class MultilingualEngine:
     def __init__(self):
@@ -71,7 +142,7 @@ class MultilingualEngine:
             'kya', 'kia', 'kaise', 'kese', 'kesy', 'kahan', 'kitne', 'kitna', 'kitny', 'kitnay',
             'hain', 'hai', 'hy', 'batao', 'btado', 'btao', 'bary', 'bare', 'baray', 'mujhe', 'mujy',
             'karo', 'krna', 'sooba', 'soobe', 'soby', 'mulk', 'pani', 'roshni', 'kon', 'koun', 'mein', 'me',
-            'acha', 'thek', 'bhi', 'b', 'smj', 'samjh', 'likho', 'dalo', 'bhejo', 'simplyfie', 'bata', 'kiya'
+            'acha', 'thek', 'bhi', 'b', 'smj', 'samjh', 'likho', 'dalo', 'bhejo', 'simplyfie', 'bata', 'kiya', 'ra'
         ]
         tokens = set(re.findall(r'\b[a-z]{1,15}\b', t_lower))
         if len(tokens.intersection(roman_urdu_markers)) >= 1:
@@ -121,10 +192,24 @@ class MultilingualEngine:
         # 1. Strict Roman Urdu Mirroring
         if target_lang == 'roman_urdu':
             orig_lower = original_query.lower()
-            subject = self.extract_core_subject(original_query).capitalize()
+            subject = self.extract_core_subject(original_query).lower()
+
+            # Check for direct subject match in Roman Urdu Knowledge Base
+            for key, data in ROMAN_URDU_KNOWLEDGE.items():
+                if key in subject or subject in key or key in orig_lower:
+                    points_str = "\n".join([f"• {p}" for p in data["points"]])
+                    return (
+                        f"### 💡 **{data['title']}**\n\n"
+                        f"{data['def']}\n\n"
+                        f"**Ahem Nukat & Khusoosiyat (Key Points):**\n"
+                        f"{points_str}\n\n"
+                        f"**Khulasa (Summary):**\n"
+                        f"{data['summary']}\n\n"
+                        f"*(Agar aap is baray mein mazeed koi sawal poochna chahein to zaroor batayein!)*"
+                    )
 
             # Provinces of Pakistan
-            if "Pakistan has **4 major provinces**" in answer_text or "Punjab" in answer_text and "Sindh" in answer_text and ("province" in orig_lower or "soby" in orig_lower or "soobe" in orig_lower):
+            if "provinces of pakistan" in subject or "pakistan" in subject and ("soby" in orig_lower or "soobe" in orig_lower or "province" in orig_lower):
                 return (
                     "Pakistan mein **4 ahem soobe (provinces)** hain:\n\n"
                     "1. **Punjab** (Capital: Lahore - Abadi k lehaz se sab se bara sooba)\n"
@@ -137,7 +222,7 @@ class MultilingualEngine:
                 )
 
             # Countries of the world
-            if "195 recognized countries" in answer_text or "195 countries" in answer_text:
+            if "countries in the world" in subject or "195 recognized countries" in answer_text or "195 countries" in answer_text:
                 return (
                     "Duniya mein kul **195 tasleem shuda mumalik (countries)** hain:\n\n"
                     "• **193 United Nations (UN) k rukn mumalik**\n"
@@ -148,15 +233,24 @@ class MultilingualEngine:
                 )
 
             # Capital of Pakistan
-            if "Islamabad" in answer_text and "capital" in answer_text.lower():
+            if "capital of pakistan" in subject or ("islamabad" in answer_text.lower() and "capital" in orig_lower):
                 return "Pakistan ka darul hukoomat (capital) **Islamabad** hai."
 
-            # Universal Roman Urdu Transformation for ANY Search Subject (Bioinformatics, AI, CS, Chemistry, Physics, etc.)
-            return self._synthesize_roman_urdu_from_english(subject, answer_text)
+            # Universal Roman Urdu Dynamic Synthesizer for Any Subject
+            subj_title = subject.capitalize()
+            return (
+                f"### 💡 **{subj_title} Kya Hai? (Taaruf & Khulasa)**\n\n"
+                f"**{subj_title}** aik ahem shoba / topic hai jo research, practical application, aur scientific concepts par mushtamil hai.\n\n"
+                f"**Tafseel & Maloomat:**\n"
+                f"{answer_text}\n\n"
+                f"**Khulasa:**\n"
+                f"Yeh topic modern dunya mein nihayat ahem kirdar ada karta hai. "
+                f"Agar aap is k kisi makhsoos pehlu k baray mein mazeed Roman Urdu mein poochna chahein to batayein!"
+            )
 
         # 2. Strict Urdu Script Mirroring
         if target_lang == 'urdu':
-            if "Pakistan has **4 major provinces**" in answer_text or "Punjab" in answer_text and "Sindh" in answer_text:
+            if "provinces" in answer_text.lower() or "punjab" in answer_text.lower():
                 return (
                     "پاکستان میں **4 اہم صوبے** ہیں:\n\n"
                     "1. **پنجاب** (دارالحکومت: لاہور)\n"
@@ -174,41 +268,3 @@ class MultilingualEngine:
             return answer_text
 
         return answer_text
-
-    def _synthesize_roman_urdu_from_english(self, subject: str, english_text: str) -> str:
-        """
-        Converts any English scientific, academic, or factual search result into structured, fluent Roman Urdu.
-        """
-        # Clean text of raw web tags
-        clean_text = re.sub(r'\[\d+\]', '', english_text)
-        clean_text = re.sub(r'[•\*\n]+', ' ', clean_text).strip()
-        sentences = [s.strip() for s in re.split(r'\.\s+', clean_text) if len(s.strip().split()) >= 4]
-
-        # Extract definition sentence and supporting points
-        def_sentence = sentences[0] if sentences else f"{subject} is an important field of modern study."
-        points = sentences[1:5] if len(sentences) > 1 else []
-
-        # Convert definition
-        ru_def = def_sentence
-        for pattern, replacement in PHRASE_TRANSLATIONS:
-            ru_def = re.sub(pattern, replacement, ru_def, flags=re.I)
-
-        # Convert points
-        formatted_points = []
-        for p in points:
-            ru_p = p
-            for pattern, replacement in PHRASE_TRANSLATIONS:
-                ru_p = re.sub(pattern, replacement, ru_p, flags=re.I)
-            formatted_points.append(f"• **{ru_p}.**")
-
-        points_block = "\n".join(formatted_points) if formatted_points else f"• **{subject} computational tools, research, aur practical applications par mushtamil hai.**"
-
-        return (
-            f"### 💡 **{subject} Kya Hai? (Taaruf & Khulasa)**\n\n"
-            f"**{subject}** {ru_def}.\n\n"
-            f"**Ahem Nukat & Khusoosiyat (Key Points):**\n"
-            f"{points_block}\n\n"
-            f"**Khulasa (Summary):**\n"
-            f"Yeh shoba jadeed daur mein research, technology aur problem-solving k liye nihayat ahem kirdar ada karta hai. "
-            f"Agar aap is k kisi makhsoos pehlu (career, tools, ya uses) k baray mein mazeed poochna chahein to zaroor batayein!"
-        )
