@@ -1524,19 +1524,16 @@ html, body {
   height: 100vh;
   background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(8px);
-  display: flex;
+  display: none;
   align-items: center;
   justify-content: center;
   z-index: 1000;
 }
 
-.modal-backdrop:not(.active)[style*="display: none"] {
-  display: none !important;
-}
-
 .modal-backdrop.active {
   display: flex !important;
 }
+
 
 .modal-card {
   background: var(--bg-card);

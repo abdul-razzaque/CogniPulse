@@ -910,14 +910,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // 9. Modals (AI Settings & Teach Fact)
   // ==========================================
   function openAiSettings() {
+    aiSettingsModal.style.display = 'flex';
     aiSettingsModal.classList.add('active');
     if (aiProviderSelect) aiProviderSelect.value = localStorage.getItem('cognipulse_ai_provider') || 'auto';
     if (inputCustomApiKey) inputCustomApiKey.value = localStorage.getItem('cognipulse_api_key') || '';
   }
 
+  function closeAiSettings() {
+    aiSettingsModal.style.display = 'none';
+    aiSettingsModal.classList.remove('active');
+  }
+
   if (btnHeaderAiSettings) btnHeaderAiSettings.addEventListener('click', openAiSettings);
   if (btnSidebarAiSettings) btnSidebarAiSettings.addEventListener('click', openAiSettings);
-  if (btnCloseAiSettingsModal) btnCloseAiSettingsModal.addEventListener('click', () => aiSettingsModal.classList.remove('active'));
+  if (btnCloseAiSettingsModal) btnCloseAiSettingsModal.addEventListener('click', closeAiSettings);
 
   if (btnSaveAiSettings) {
     btnSaveAiSettings.addEventListener('click', () => {
@@ -926,7 +932,7 @@ document.addEventListener('DOMContentLoaded', () => {
       localStorage.setItem('cognipulse_ai_provider', p);
       if (k) localStorage.setItem('cognipulse_api_key', k);
       else localStorage.removeItem('cognipulse_api_key');
-      aiSettingsModal.classList.remove('active');
+      closeAiSettings();
       alert('AI Engine settings saved!');
     });
   }
@@ -941,13 +947,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function openTeachModal() {
     modalFactText.value = '';
+    teachModal.style.display = 'flex';
     teachModal.classList.add('active');
+    modalFactText.focus();
+  }
+
+  function closeTeachModal() {
+    teachModal.style.display = 'none';
+    teachModal.classList.remove('active');
   }
 
   if (btnHeaderTeach) btnHeaderTeach.addEventListener('click', openTeachModal);
   if (btnSidebarTeach) btnSidebarTeach.addEventListener('click', openTeachModal);
-  if (btnCloseTeachModal) btnCloseTeachModal.addEventListener('click', () => teachModal.classList.remove('active'));
-  if (btnCancelTeach) btnCancelTeach.addEventListener('click', () => teachModal.classList.remove('active'));
+  if (btnCloseTeachModal) btnCloseTeachModal.addEventListener('click', closeTeachModal);
+  if (btnCancelTeach) btnCancelTeach.addEventListener('click', closeTeachModal);
+
+  // Close modals on outside click or ESC key
+  window.addEventListener('click', (e) => {
+    if (e.target === teachModal) closeTeachModal();
+    if (e.target === aiSettingsModal) closeAiSettings();
+  });
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeTeachModal();
+      closeAiSettings();
+      closeArtifactsCanvas();
+    }
+  });
 
   if (btnSubmitTeach) {
     btnSubmitTeach.addEventListener('click', async () => {
@@ -962,7 +989,7 @@ document.addEventListener('DOMContentLoaded', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ fact, category: cat })
         });
-        teachModal.classList.remove('active');
+        closeTeachModal();
         appendAiMessageDOM(`🧠 **Knowledge Assimilated:** I have integrated this new fact into my neural core:\n\n> *"${fact}"*`);
         neuralVis.triggerPulse();
         fetchTelemetry();
@@ -971,6 +998,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+
 
   // ==========================================
   // 10. Background Telemetry & Initialization
