@@ -1,0 +1,1 @@
+# CogniPulse uses pure Python standard libraries for maximum speed & serverless compatibility
