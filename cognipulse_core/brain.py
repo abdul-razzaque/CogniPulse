@@ -214,27 +214,22 @@ class CogniPulseBrain:
 
         # 5. Greetings
         if any(w == q_lower.strip() for w in ["hi", "hello", "helo", "hey", "salam", "assalam o alaikum", "aoa"]):
+
             return (
-                "Hello! 👋 I am **CogniPulse**, your autonomous self-learning AI model.\n\n"
-                "I am connected to live knowledge systems and can answer questions about any topic in the world, while continuously learning from our conversations. How can I help you today?"
+                "Hello! How can I help you today? Feel free to ask any question, discuss ideas, or work on code."
             ), None
 
         # 6. Identity / Introduction
         if any(w in q_lower for w in ["who are you", "what is cognipulse", "what are you", "your name", "koun ho", "intro"]):
             return (
-                "⚡ **I am CogniPulse**, an autonomous self-learning AI model designed with real-time web search and continuous synaptic memory plasticity.\n\n"
-                "• **Live Knowledge Integration:** I can search and synthesize answers to any question across science, history, geography, tech, and current affairs.\n"
-                "• **Continuous Synaptic Memory:** I learn from every conversation and remember corrections in real-time.\n"
-                "• **Dynamic Concept Graph:** Entities and relationships are automatically mapped as we speak!"
+                "I am **CogniPulse**, an advanced AI assistant designed to help with research, coding, analysis, problem solving, and general knowledge."
             ), None
 
         # 7. Real-Time Autonomous Live Web Search
-        # If not matched locally, search the live web (Wikipedia + DuckDuckGo knowledge graph)
         search_result = self.search_engine.search_live_web(query)
         if search_result and search_result.get("summary"):
             title = search_result.get("title", query)
             summary = search_result.get("summary", "")
-            source = search_result.get("source", "Live Web Knowledge")
 
             # Assimilate this discovered fact into Hebbian memory on the fly
             self.memory.store_memory(
@@ -245,22 +240,19 @@ class CogniPulseBrain:
             )
             self.kg.extract_and_ingest(f"{title} is {summary[:200]}")
 
-            formatted_response = f"### [Live Knowledge] {title}\n\n{summary}"
-            return formatted_response, search_result
+            return summary, search_result
 
-
-        # 8. Intelligent Concept Decomposition Fallback
+        # 8. Intelligent Concept Reasoning Fallback
         words = [w.capitalize() for w in re.findall(r'\b[a-zA-Z]{3,}\b', query) if w.lower() not in ['what', 'when', 'where', 'which', 'who', 'how', 'many', 'does', 'the', 'is', 'are', 'about']]
         key_concept = words[0] if words else query
 
         return (
-            f"Here is what I have processed on **{query}**:\n\n"
-            f"• **Focus Topic:** `{key_concept}`\n"
-            f"• **Associative Neural Status:** Analyzed and mapped across CogniPulse's cognitive network.\n\n"
-            f"💡 *You can teach me specific facts or corrections directly by saying `\"Remember that [fact]\"` or using the **Teach Fact** button!*"
+            f"Regarding **{query}**:\n\n"
+            f"Could you please specify what particular aspect of **{key_concept}** you would like to explore or focus on?"
         ), None
 
     def teach_fact(self, fact_text: str, category: str = "fact") -> Dict[str, Any]:
+
         mem_node = self.memory.store_memory(fact_text, category="user_taught", confidence=1.0, tags=["user_taught"])
         kg_res = self.kg.extract_and_ingest(fact_text)
         return {

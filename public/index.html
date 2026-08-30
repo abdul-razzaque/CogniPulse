@@ -134,41 +134,41 @@
       <div id="chat-view" class="view-panel active">
         <div class="chat-messages-scroll" id="chatMessagesScroll">
           
-          <!-- Hero Banner (Shows when chat is empty) -->
+          <!-- Hero Banner (Standard Professional Claude/ChatGPT/Gemini style) -->
           <div class="hero-container" id="heroWelcome">
             <div class="hero-logo">
               <i data-lucide="brain-circuit"></i>
             </div>
-            <h1 class="hero-heading">How can I learn and assist you today?</h1>
-            <p class="hero-subtext">CogniPulse is an autonomous self-evolving AI model. It remembers facts, forms concept graphs, and improves its reasoning with every message.</p>
+            <h1 class="hero-heading">How can I help you today?</h1>
+            <p class="hero-subtext">Ask questions, write and debug code, analyze documents, or explore complex topics.</p>
 
             <div class="suggestion-grid">
-              <div class="suggestion-card" data-prompt="Who are you and what makes CogniPulse unique?">
+              <div class="suggestion-card" data-prompt="Explain Quantum Computing in simple terms with real-world examples.">
                 <i data-lucide="sparkles" class="sug-icon text-cyan"></i>
                 <div class="sug-text">
-                  <strong>Introduce Yourself</strong>
-                  <span>Learn about CogniPulse's self-learning architecture</span>
+                  <strong>Explain a Complex Concept</strong>
+                  <span>Break down quantum computing in simple terms</span>
                 </div>
               </div>
-              <div class="suggestion-card" data-prompt="How does your continuous Hebbian memory work?">
-                <i data-lucide="cpu" class="sug-icon text-purple"></i>
+              <div class="suggestion-card" data-prompt="Write a clean Python script to scrape top news headlines.">
+                <i data-lucide="code" class="sug-icon text-purple"></i>
                 <div class="sug-text">
-                  <strong>Hebbian Plasticity</strong>
-                  <span>Understand how synaptic weights adapt in real-time</span>
+                  <strong>Write & Debug Code</strong>
+                  <span>Generate clean, modern code solutions</span>
                 </div>
               </div>
-              <div class="suggestion-card" data-prompt="Remember that the speed of light in vacuum is approximately 299,792 km/s.">
-                <i data-lucide="book-open" class="sug-icon text-emerald"></i>
+              <div class="suggestion-card" data-prompt="How many countries are in the world and what are their major continents?">
+                <i data-lucide="globe" class="sug-icon text-emerald"></i>
                 <div class="sug-text">
-                  <strong>Teach Ground Truth</strong>
-                  <span>Inject a new scientific fact into my neural core</span>
+                  <strong>World Knowledge & Facts</strong>
+                  <span>Explore geography, history, and science</span>
                 </div>
               </div>
-              <div class="suggestion-card" data-prompt="What concepts and relations are in your knowledge graph right now?">
-                <i data-lucide="share-2" class="sug-icon text-amber"></i>
+              <div class="suggestion-card" data-prompt="Help me brainstorm 5 unique and catchy startup ideas for 2026.">
+                <i data-lucide="lightbulb" class="sug-icon text-amber"></i>
                 <div class="sug-text">
-                  <strong>Explore Knowledge Graph</strong>
-                  <span>Inspect autonomous entity relations</span>
+                  <strong>Brainstorm Ideas</strong>
+                  <span>Generate creative strategies and concepts</span>
                 </div>
               </div>
             </div>
@@ -190,21 +190,22 @@
             <button class="btn-attach" id="btnUploadFile" title="Attach Document / Code File (.txt, .pdf, .py, .json, .csv)">
               <i data-lucide="paperclip"></i>
             </button>
-            <button class="btn-attach" id="btnQuickTeach" title="Teach Ground Truth">
+            <button class="btn-attach" id="btnQuickTeach" title="Knowledge Settings">
               <i data-lucide="sparkles"></i>
             </button>
-            <button class="btn-attach" id="btnQuickIngest" title="Paste Raw Notes">
+            <button class="btn-attach" id="btnQuickIngest" title="Paste Notes / Text">
               <i data-lucide="file-text"></i>
             </button>
-            <textarea id="chatInput" placeholder="Ask CogniPulse, analyze attached files, teach facts..." rows="1"></textarea>
+            <textarea id="chatInput" placeholder="Ask CogniPulse anything..." rows="1"></textarea>
             <button class="btn-send-main" id="btnSendChat" title="Send Message">
               <i data-lucide="arrow-up"></i>
             </button>
           </div>
           <div class="input-disclaimer">
-            CogniPulse can read, analyze, and learn from uploaded documents, code files, and datasets.
+            CogniPulse can make mistakes. Verify important information.
           </div>
         </div>
+
 
       </div>
 
