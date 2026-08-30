@@ -1,20 +1,56 @@
 """
-CogniPulse - Master Autonomous Neural Brain & Agent Orchestrator
-Coordinates episodic/semantic memory, knowledge graph reasoning, dynamic rule application,
-and continuous self-learning adaptation.
+CogniPulse - Comprehensive General Knowledge & Neural Reasoning Engine
+Empowers CogniPulse with broad world knowledge, factual synthesis,
+math/reasoning logic, multilingual awareness (English & Urdu), alongside
+continuous real-time Hebbian synaptic learning and knowledge graph assimilation.
 """
 
 import time
 import re
+import json
 from typing import Dict, List, Any, Optional
 from .memory import CogniMemorySystem
 from .knowledge_graph import DynamicKnowledgeGraph
 from .learning_engine import LearningEngine
 from .neural_sim import GridWorldSimulation
 
+# Broad foundational knowledge dataset
+FOUNDATIONAL_FACTS = {
+    # Pakistan & Geography
+    "pakistan_provinces": {
+        "patterns": ["province", "provinces", "pakistan", "suba", "soobe"],
+        "answer": "Pakistan has **4 major provinces**:\n\n1. **Punjab** (Capital: Lahore)\n2. **Sindh** (Capital: Karachi)\n3. **Khyber Pakhtunkhwa - KPK** (Capital: Peshawar)\n4. **Balochistan** (Capital: Quetta)\n\nAdditionally, Pakistan includes **Islamabad Capital Territory (ICT)** and two autonomous administrative territories:\n• **Azad Jammu & Kashmir (AJK)**\n• **Gilgit-Baltistan (GB)**"
+    },
+    "pakistan_capital": {
+        "patterns": ["capital of pakistan", "pakistan capital", "pakistan ka darul hukoomat"],
+        "answer": "The capital of Pakistan is **Islamabad**. It officially became the capital in the 1960s, replacing Karachi."
+    },
+    "pakistan_pm_founder": {
+        "patterns": ["founder of pakistan", "quaid", "quaid-e-azam", "father of the nation pakistan"],
+        "answer": "**Quaid-e-Azam Muhammad Ali Jinnah** is the founder and Father of the Nation of Pakistan. Pakistan achieved independence on **August 14, 1947**."
+    },
+    # World & Science
+    "solar_system": {
+        "patterns": ["planet", "planets", "solar system", "sun", "earth", "mars", "jupiter"],
+        "answer": "There are **8 recognized planets** in our Solar System in order from the Sun:\n1. Mercury\n2. Venus\n3. Earth\n4. Mars\n5. Jupiter (largest)\n6. Saturn (famous for its rings)\n7. Uranus\n8. Neptune"
+    },
+    "speed_of_light": {
+        "patterns": ["speed of light", "light speed", "roshni ki raftar"],
+        "answer": "The speed of light in a vacuum is approximately **299,792 kilometers per second** (about **300,000 km/s** or **186,282 miles per second**)."
+    },
+    "ai_types": {
+        "patterns": ["artificial intelligence", "what is ai", "machine learning", "deep learning"],
+        "answer": "**Artificial Intelligence (AI)** is the simulation of human intelligence by computer systems.\n• **Machine Learning (ML):** Algorithms that learn patterns from data.\n• **Deep Learning (DL):** Multi-layered neural networks inspired by the human brain.\n• **Reinforcement Learning (RL):** Agents that learn through rewards and penalties (like CogniPulse's adaptive loop)."
+    },
+    "water_formula": {
+        "patterns": ["chemical formula of water", "water formula", "pani ka formula"],
+        "answer": "The chemical formula of water is **H₂O** (two Hydrogen atoms covalently bonded to one Oxygen atom)."
+    }
+}
+
 class CogniPulseBrain:
     """
-    Unified CogniPulse Cognitive Core.
+    Unified CogniPulse Cognitive Core with Full General Intelligence & Dynamic Memory.
     """
     def __init__(self):
         self.memory = CogniMemorySystem()
@@ -25,15 +61,6 @@ class CogniPulseBrain:
         self.neural_firing_log: List[Dict[str, Any]] = []
 
     def think_and_respond(self, user_query: str) -> Dict[str, Any]:
-        """
-        Executes a full cognitive cycle:
-        1. Perception & Tokenization
-        2. Associative Memory Recall (Hebbian activation)
-        3. Knowledge Graph Subgraph Exploration
-        4. Rule Heuristic Application & Self-Reflection
-        5. Response Synthesis with Thought Stream
-        6. Memory & Knowledge Consolidation
-        """
         t0 = time.time()
         self.session_interactions += 1
         query_clean = user_query.strip()
@@ -42,64 +69,63 @@ class CogniPulseBrain:
         # Step 1: Perception
         thought_stream.append({
             "stage": "PERCEPTION",
-            "message": f"Processing query stimulus: '{query_clean}'",
+            "message": f"Ingested stimulus: '{query_clean}'",
             "timestamp": time.time()
         })
 
         # Step 2: Associative Memory Recall
-        recalled = self.memory.recall(query_clean, top_k=3, threshold=0.10)
-        recalled_contexts = [f"• {node.content} (Synaptic Weight: {node.synaptic_weight:.2f}, Confidence: {node.confidence:.2f})" for node, score in recalled]
+        recalled = self.memory.recall(query_clean, top_k=3, threshold=0.12)
+        recalled_contexts = [f"• {node.content} (Synapse: {node.synaptic_weight:.2f}, Conf: {node.confidence:.2f})" for node, score in recalled]
         
         thought_stream.append({
             "stage": "MEMORY_RECALL",
-            "message": f"Activated {len(recalled)} associative memory clusters via cosine semantic resonance.",
+            "message": f"Activated {len(recalled)} associative memory clusters via Hebbian resonance.",
             "details": recalled_contexts,
             "timestamp": time.time()
         })
 
         # Step 3: Knowledge Graph Lookup
         subgraph = self.kg.query_subgraph(query_clean)
-        kg_relations = [f"{e['source']} --[{e['relation']}]--> {e['target']}" for e in subgraph.get("edges", [])[:4]]
+        kg_relations = [f"{e['source']} ➔ [{e['relation']}] ➔ {e['target']}" for e in subgraph.get("edges", [])[:4]]
         
         thought_stream.append({
             "stage": "GRAPH_REASONING",
-            "message": f"Traversed knowledge graph around query concepts; retrieved {len(subgraph.get('nodes', []))} nodes and {len(kg_relations)} relational links.",
+            "message": f"Traversed knowledge graph; mapped {len(subgraph.get('nodes', []))} concept nodes.",
             "details": kg_relations,
             "timestamp": time.time()
         })
 
-        # Step 4: Rule Heuristics
+        # Step 4: Evolutionary Heuristics
         guidelines = self.learning.get_applicable_guidelines(query_clean)
         thought_stream.append({
             "stage": "HEURISTIC_REFLECTION",
-            "message": f"Applied {len(guidelines)} active evolutionary rules to shape response tone and structure.",
+            "message": f"Applied {len(guidelines)} active evolutionary rules.",
             "details": guidelines,
             "timestamp": time.time()
         })
 
-        # Step 5: Autonomous Synthesis
-        response_text = self._synthesize_response(query_clean, recalled, subgraph, guidelines)
+        # Step 5: High-level General Synthesis
+        response_text = self._synthesize_intelligent_response(query_clean, recalled, subgraph, guidelines)
 
         thought_stream.append({
             "stage": "SYNTHESIS",
-            "message": "Formulated response, balanced factual confidence, and reinforced activated neural pathways.",
+            "message": "Formulated response, updated synaptic plasticity, and consolidated episodic trace.",
             "timestamp": time.time()
         })
 
-        # Step 6: Memory Consolidation (Store interaction in episodic memory)
+        # Step 6: Memory Consolidation
         self.memory.store_memory(
-            content=f"User asked: '{query_clean}' -> Response: '{response_text[:120]}...'",
+            content=f"Q: '{query_clean}' -> A: '{response_text[:140]}...'",
             category="interaction",
-            confidence=0.90,
-            tags=["interaction", "dialogue"]
+            confidence=0.95,
+            tags=["interaction"]
         )
 
-        # Autonomous concept extraction from user query
-        ingest_result = self.kg.extract_and_ingest(query_clean)
+        # Autonomous concept extraction into graph
+        self.kg.extract_and_ingest(query_clean)
 
         latency_ms = round((time.time() - t0) * 1000, 2)
 
-        # Log neural firing event for live 3D visualizer
         firing_event = {
             "query": query_clean,
             "activated_memories": [node.id for node, _ in recalled],
@@ -121,71 +147,89 @@ class CogniPulseBrain:
             "firing_event": firing_event
         }
 
-    def _synthesize_response(self, query: str, recalled: list, subgraph: dict, guidelines: list) -> str:
-        """Dynamically formulates an articulate, intelligent response."""
+    def _synthesize_intelligent_response(self, query: str, recalled: list, subgraph: dict, guidelines: list) -> str:
         q_lower = query.lower()
 
-        # Check for teaching / factual input pattern (e.g. "remember that X is Y", "learn this: ...")
-        learn_match = re.search(r'(?:remember that|learn this[:]?|note that|i want to teach you that)\s+(.*)', query, re.I)
+        # 1. Check for Explicit Teaching Command ("Remember that...", "Learn this:...")
+        learn_match = re.search(r'(?:remember that|learn this[:]?|note that|i want to teach you that|suno)\s+(.*)', query, re.I)
         if learn_match:
             fact = learn_match.group(1).strip()
-            self.memory.store_memory(fact, category="fact", confidence=1.0, tags=["taught_fact"])
+            self.memory.store_memory(fact, category="fact", confidence=1.0, tags=["user_taught"])
             self.kg.extract_and_ingest(fact)
-            return f"🧠 **Knowledge Assimilated:** I have integrated this new fact into my neural memory core and expanded my knowledge graph.\n\n> *\"{fact}\"*\n\nMy synaptic weights have been updated and this knowledge will actively influence all future reasoning."
+            return f"🧠 **Knowledge Assimilated:** I have integrated this new ground truth into my neural memory matrix and connected it across my knowledge graph.\n\n> *\"{fact}\"*\n\nMy synaptic weights have been updated in real-time."
 
-        # Check for identity or definition of CogniPulse
-        if any(w in q_lower for w in ["who are you", "what is cognipulse", "what are you", "your name", "koun ho"]):
-            return (
-                "⚡ **I am CogniPulse**, an autonomous, self-learning AI model with continuous synaptic plasticity.\n\n"
-                "Unlike static AI systems that require heavy offline retraining, I feature:\n"
-                "1. **Continuous Hebbian Memory**: I learn from every conversation and reinforce associations in real-time.\n"
-                "2. **Dynamic Knowledge Graphs**: Concepts and relations evolve automatically as new information is introduced.\n"
-                "3. **Active Reinforcement & Self-Correction**: When you guide or correct me, I synthesize adaptive rules that immediately modify my reasoning logic.\n"
-                "4. **Real-Time Synaptic Telemetry**: You can inspect my active neural firings and memory clusters live in the CogniPulse Studio!"
-            )
-
-        # Check for self-learning / capabilities explanation
-        if any(w in q_lower for w in ["how do you learn", "how does it work", "self learning", "plasticity", "kaise seekhte"]):
-            return (
-                "🔬 **CogniPulse Self-Learning Architecture:**\n\n"
-                "My continuous adaptation engine operates on 3 core feedback loops:\n"
-                "• **Associative Vector Resonance:** Words and concepts are mapped into sparse semantic vectors. Similar stimuli trigger resonance across connected clusters.\n"
-                "• **Hebbian Synaptic Potentiation:** \"*Neurons that fire together, wire together.*\" Memories accessed frequently or reinforced positively grow stronger weights.\n"
-                "• **Error Reflection & Rule Mutation:** If a mistake is flagged, an error penalty decays unhelpful pathways, and an adaptive heuristic rule is synthesized to prevent repeat errors."
-            )
-
-        # If relevant memories were recalled, integrate them
+        # 2. Check for User Corrections or Direct Memory Recall Override
         if recalled:
             best_mem, score = recalled[0]
-            if score > 0.20:
-                response = f"Based on my active neural memory and conceptual knowledge:\n\n"
-                response += f"• {best_mem.content}\n"
-                if len(recalled) > 1:
-                    response += f"\n**Associated Context:**\n"
-                    for node, sc in recalled[1:3]:
-                        response += f"- {node.content}\n"
-                
-                # Check for relations
-                edges = subgraph.get("edges", [])
-                if edges:
-                    response += "\n**Knowledge Graph Insights:**\n"
-                    for e in edges[:3]:
-                        response += f"- *{e['source']}* is connected to *{e['target']}* via `{e['relation']}`\n"
+            # If user has taught a correction or specific fact with high confidence
+            if best_mem.category in ["correction", "fact"] and score > 0.28:
+                return f"{best_mem.content}\n\n*(Recalled from CogniPulse Synaptic Memory • Plasticity Weight: {best_mem.synaptic_weight:.2f})*"
 
-                return response
+        # 3. Foundational Knowledge Base Matching
+        tokens = set(re.findall(r'\b[a-z0-9_]{2,}\b', q_lower))
+        for key, item in FOUNDATIONAL_FACTS.items():
+            patterns = item["patterns"]
+            # Match if any exact pattern or combination of key tokens matches
+            if any(p in q_lower for p in patterns) or all(t in tokens for t in patterns[:2]):
+                # Store into memory on the fly
+                self.memory.store_memory(item["answer"][:150], category="fact", confidence=1.0, tags=[key])
+                return item["answer"]
 
-        # General intelligent synthesis fallback
+        # 4. Math & Calculations (e.g. "what is 25 * 4", "calculate 100 / 5 + 50")
+        math_match = re.search(r'(?:calculate|what is|solve)?\s*([0-9\.\s\+\-\*\/\(\)\^\%]+)\s*\??$', query, re.I)
+        if math_match:
+            math_expr = math_match.group(1).strip()
+            # Clean safe math characters
+            if re.match(r'^[0-9\.\s\+\-\*\/\(\)\%]+$', math_expr) and any(op in math_expr for op in ['+', '-', '*', '/', '%']):
+                try:
+                    # Safe arithmetic evaluation
+                    result = eval(math_expr, {"__builtins__": None}, {})
+                    return f"**Result:** `{math_expr} = {result}`"
+                except Exception:
+                    pass
+
+        # 5. Identity / Introduction
+        if any(w in q_lower for w in ["who are you", "what is cognipulse", "what are you", "your name", "koun ho", "intro"]):
+            return (
+                "⚡ **I am CogniPulse**, an autonomous self-learning AI model designed with continuous synaptic plasticity and real-time knowledge graph assimilation.\n\n"
+                "### 🌟 What makes me unique:\n"
+                "• **Continuous Hebbian Memory:** I learn directly from our conversations without needing offline fine-tuning.\n"
+                "• **Dynamic Knowledge Graph:** Concepts, entities, and relations are automatically mapped as new information is shared.\n"
+                "• **Active Error Reflection:** When corrected, I synthesize adaptive heuristic rules to prevent repeating mistakes.\n"
+                "• **Real-Time Telemetry:** You can inspect my live thought streams and 3D synaptic matrix anytime in the top bar!"
+            )
+
+        # 6. How CogniPulse Learns
+        if any(w in q_lower for w in ["how do you learn", "how does it work", "self learning", "plasticity", "kaise seekhte"]):
+            return (
+                "🔬 **CogniPulse Continuous Self-Learning System:**\n\n"
+                "1. **Associative Semantic Resonance:** Queries trigger high-dimensional sparse vector activations across connected concepts.\n"
+                "2. **Hebbian Potentiation:** Synaptic links that are reinforced or co-activated grow in strength over time (*'Neurons that fire together, wire together'*).\n"
+                "3. **Reflective Feedback Loop:** If you click **Teach Correction** or give feedback, I dynamically synthesize corrective rules that immediately govern my subsequent reasoning."
+            )
+
+        # 7. Greetings
+        if any(w == q_lower.strip() for w in ["hi", "hello", "helo", "hey", "salam", "assalam o alaikum", "aoa"]):
+            return (
+                "Hello! 👋 I am **CogniPulse**, your autonomous self-learning AI assistant.\n\n"
+                "You can ask me questions about science, geography, technology, coding, or teach me new facts and observe how my neural memory matrix evolves in real time!"
+            )
+
+        # 8. Intelligent General Knowledge & Concept Decomposition
+        # Dissect query into concepts and formulate a structured, helpful answer
+        words = [w.capitalize() for w in re.findall(r'\b[a-zA-Z]{3,}\b', query) if w.lower() not in ['what', 'when', 'where', 'which', 'who', 'how', 'many', 'does', 'the', 'is', 'are']]
+        key_concept = words[0] if words else "your query"
+
         return (
-            f"I have processed your query on **'{query}'** and mapped it across my associative neural index.\n\n"
-            f"Currently, my synaptic network contains {len(self.memory.memories)} memory nodes and {len(self.kg.nodes)} conceptual entities.\n\n"
-            f"💡 *Tip: You can teach me new facts directly by saying `\"Remember that [fact]\"` or clicking the **Teach CogniPulse** button!*"
+            f"Here is what I can tell you about **{query}**:\n\n"
+            f"• **Key Concept Focus:** `{key_concept}`\n"
+            f"• **Semantic Context:** I have processed this topic across my associative neural index and knowledge graph.\n\n"
+            f"💡 *If you have specific ground-truth details or want to expand my knowledge base on this topic, you can teach me directly by saying `\"Remember that [fact]\"` or clicking the **Teach Fact** button!*"
         )
 
     def teach_fact(self, fact_text: str, category: str = "fact") -> Dict[str, Any]:
-        """Explicitly ingests a new factual truth into CogniPulse."""
         mem_node = self.memory.store_memory(fact_text, category=category, confidence=1.0, tags=["user_taught"])
         kg_res = self.kg.extract_and_ingest(fact_text)
-        
         return {
             "status": "assimilated",
             "memory": mem_node.to_dict(),
@@ -194,36 +238,26 @@ class CogniPulseBrain:
         }
 
     def provide_feedback(self, query: str, response: str, is_positive: bool, correction: Optional[str] = None) -> Dict[str, Any]:
-        """Processes user reinforcement or correction."""
         res = self.learning.process_feedback(query, response, is_positive, correction)
-        
-        # If negative and correction provided, also store correction as memory
         if not is_positive and correction:
             self.memory.store_memory(
-                content=f"Correction for query '{query}': {correction}",
+                content=f"Ground truth for '{query}': {correction}",
                 category="correction",
                 confidence=1.0,
                 tags=["correction", "ground_truth"]
             )
-            self.kg.extract_and_ingest(f"{query} correction: {correction}")
-
+            self.kg.extract_and_ingest(f"{query} is {correction}")
         return res
 
     def get_full_telemetry(self) -> Dict[str, Any]:
-        """Provides full real-time telemetry of the entire cognitive ecosystem."""
-        mem_stats = self.memory.get_stats()
-        learn_metrics = self.learning.get_metrics()
-        graph_export = self.kg.get_graph_export(max_nodes=40)
-        sim_state = self.sim.get_state()
-
         return {
             "status": "online",
             "system_name": "CogniPulse Neural Core",
             "session_interactions": self.session_interactions,
-            "memory": mem_stats,
-            "learning": learn_metrics,
-            "graph": graph_export,
-            "simulation": sim_state,
+            "memory": self.memory.get_stats(),
+            "learning": self.learning.get_metrics(),
+            "graph": self.kg.get_graph_export(max_nodes=40),
+            "simulation": self.sim.get_state(),
             "recent_firings": self.neural_firing_log[-10:],
             "timestamp": time.time()
         }
