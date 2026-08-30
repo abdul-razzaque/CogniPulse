@@ -77,23 +77,66 @@ document.addEventListener('DOMContentLoaded', () => {
     else return (bytes / 1048576).toFixed(1) + ' MB';
   }
 
-  function handleFilesSelected(files) {
+  async function handleFilesSelected(files) {
     if (!files || files.length === 0) return;
 
-    Array.from(files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const fileContent = event.target.result;
-        currentAttachedFiles.push({
-          name: file.name,
-          sizeFormatted: formatBytes(file.size),
-          text: fileContent
-        });
-        renderAttachedPills();
-      };
-      reader.readAsText(file);
-    });
+    for (const file of Array.from(files)) {
+      const fileNameLower = file.name.toLowerCase();
+
+      if (fileNameLower.endsWith('.pdf')) {
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const pdfjs = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
+          if (pdfjs) {
+            pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
+            const pdfDoc = await loadingTask.promise;
+            let fullText = '';
+            for (let i = 1; i <= Math.min(pdfDoc.numPages, 25); i++) {
+              const page = await pdfDoc.getPage(i);
+              const textContent = await page.getTextContent();
+              const pageStrings = textContent.items.map(item => item.str).join(' ');
+              fullText += `[Page ${i}]\n${pageStrings}\n\n`;
+            }
+            currentAttachedFiles.push({
+              name: file.name,
+              sizeFormatted: formatBytes(file.size),
+              text: fullText.trim() || `[PDF Document: ${file.name} - ${pdfDoc.numPages} Pages]`
+            });
+            renderAttachedPills();
+          } else {
+            currentAttachedFiles.push({
+              name: file.name,
+              sizeFormatted: formatBytes(file.size),
+              text: `[PDF Document: ${file.name}]`
+            });
+            renderAttachedPills();
+          }
+        } catch (err) {
+          console.error("PDF Parsing Error:", err);
+          currentAttachedFiles.push({
+            name: file.name,
+            sizeFormatted: formatBytes(file.size),
+            text: `[PDF Document: ${file.name}]`
+          });
+          renderAttachedPills();
+        }
+      } else {
+        // Plain text, code, JSON, CSV, Markdown, etc.
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          currentAttachedFiles.push({
+            name: file.name,
+            sizeFormatted: formatBytes(file.size),
+            text: event.target.result
+          });
+          renderAttachedPills();
+        };
+        reader.readAsText(file);
+      }
+    }
   }
+
 
   function renderAttachedPills() {
     if (!attachedFilesContainer) return;
