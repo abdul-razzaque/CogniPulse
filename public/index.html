@@ -3,434 +3,337 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CogniPulse - Self-Learning Adaptive AI Platform</title>
-  <!-- Modern Google Fonts -->
+  <title>CogniPulse - Self-Learning AI</title>
+  <!-- Google Fonts: Outfit & Inter & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="dark-theme">
-  <!-- Dynamic Ambient Glows -->
-  <div class="ambient-glow glow-cyan"></div>
-  <div class="ambient-glow glow-purple"></div>
+<body class="ai-theme">
 
-  <div class="app-container">
-    <!-- Top Navigation Header -->
-    <header class="top-nav">
-      <div class="brand-section">
-        <div class="logo-pulse-box">
-          <i data-lucide="brain-circuit" class="brand-icon"></i>
-          <span class="pulse-ring"></span>
-        </div>
-        <div class="brand-text">
-          <div class="brand-title">
-            <span class="text-white">Cogni</span><span class="text-gradient">Pulse</span>
-            <span class="badge-v1">v1.0 NEURAL CORE</span>
+  <div class="app-layout">
+    
+    <!-- LEFT SIDEBAR (Claude/ChatGPT/Gemini style) -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="brand">
+          <div class="logo-icon-wrap">
+            <i data-lucide="brain-circuit" class="brand-svg"></i>
           </div>
-          <span class="brand-subtitle">Autonomous Continuous Self-Learning AI Model</span>
+          <div class="brand-details">
+            <span class="brand-name">Cogni<span class="gradient-text">Pulse</span></span>
+            <span class="brand-tag">Self-Learning AI</span>
+          </div>
         </div>
-      </div>
-
-      <!-- Quick Metrics Bar -->
-      <div class="nav-metrics">
-        <div class="metric-pill">
-          <span class="status-dot"></span>
-          <span class="metric-label">CORE:</span>
-          <span class="metric-val text-cyan" id="coreStatus">ONLINE</span>
-        </div>
-        <div class="metric-pill">
-          <i data-lucide="zap" class="pill-icon text-amber"></i>
-          <span class="metric-label">PLASTICITY:</span>
-          <span class="metric-val text-amber" id="plasticityVal">0.85</span>
-        </div>
-        <div class="metric-pill">
-          <i data-lucide="database" class="pill-icon text-purple"></i>
-          <span class="metric-label">MEMORIES:</span>
-          <span class="metric-val text-purple" id="memCountVal">0</span>
-        </div>
-        <div class="metric-pill">
-          <i data-lucide="git-merge" class="pill-icon text-emerald"></i>
-          <span class="metric-label">CONCEPTS:</span>
-          <span class="metric-val text-emerald" id="conceptsCountVal">0</span>
-        </div>
-      </div>
-
-      <!-- Header Action Buttons -->
-      <div class="nav-actions">
-        <button class="btn-glow-primary" id="btnOpenTeach">
-          <i data-lucide="sparkles"></i> Teach CogniPulse
+        <button class="btn-sidebar-toggle" id="btnToggleSidebar" title="Toggle Sidebar">
+          <i data-lucide="panel-left-close"></i>
         </button>
       </div>
-    </header>
 
-    <!-- Main Navigation Tabs -->
-    <nav class="sub-nav-tabs">
-      <button class="tab-btn active" data-tab="chat-tab">
-        <i data-lucide="message-square"></i> Dialogue & Evolution
-      </button>
-      <button class="tab-btn" data-tab="neural-tab">
-        <i data-lucide="activity"></i> 3D Neural Synapse Core
-      </button>
-      <button class="tab-btn" data-tab="graph-tab">
-        <i data-lucide="share-2"></i> Knowledge Graph
-      </button>
-      <button class="tab-btn" data-tab="sim-tab">
-        <i data-lucide="gamepad-2"></i> RL Simulation Lab
-      </button>
-      <button class="tab-btn" data-tab="ingest-tab">
-        <i data-lucide="file-plus"></i> Document Digester
-      </button>
-      <button class="tab-btn" data-tab="telemetry-tab">
-        <i data-lucide="cpu"></i> Telemetry & Rules
-      </button>
-    </nav>
+      <!-- New Chat Button -->
+      <div class="new-chat-wrapper">
+        <button class="btn-new-chat" id="btnNewChat">
+          <i data-lucide="plus"></i>
+          <span>New Chat</span>
+        </button>
+      </div>
 
-    <!-- Main Content Workspace -->
-    <main class="main-workspace">
+      <!-- Nav Sections -->
+      <div class="sidebar-scroll">
+        <div class="sidebar-section-title">Cognitive Capabilities</div>
+        <div class="sidebar-nav-list">
+          <button class="nav-item active" data-view="chat-view">
+            <i data-lucide="message-square"></i>
+            <span>Chat & Dialogue</span>
+          </button>
+          <button class="nav-item" data-view="brain-view">
+            <i data-lucide="activity"></i>
+            <span>3D Neural Synapse</span>
+          </button>
+          <button class="nav-item" data-view="graph-view">
+            <i data-lucide="share-2"></i>
+            <span>Knowledge Graph</span>
+          </button>
+          <button class="nav-item" data-view="sim-view">
+            <i data-lucide="gamepad-2"></i>
+            <span>RL Simulation Lab</span>
+          </button>
+        </div>
+
+        <div class="sidebar-section-title">Assimilated Memory</div>
+        <div class="memory-chips-list" id="sidebarMemoryList">
+          <!-- Dynamically populated memory highlights -->
+          <div class="memory-chip-item">
+            <i data-lucide="sparkles" class="chip-ico"></i>
+            <span class="chip-txt">Continuous Hebbian Plasticity</span>
+          </div>
+          <div class="memory-chip-item">
+            <i data-lucide="sparkles" class="chip-ico"></i>
+            <span class="chip-txt">Dynamic Knowledge Graph</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Stats (Brain Telemetry) -->
+      <div class="sidebar-footer">
+        <div class="brain-status-card">
+          <div class="status-indicator">
+            <span class="live-pulse"></span>
+            <span class="status-label">Continuous Learning Active</span>
+          </div>
+          <div class="stats-mini-row">
+            <div class="stat-mini">
+              <span class="stat-mini-val" id="sideMemCount">0</span>
+              <span class="stat-mini-lbl">Memories</span>
+            </div>
+            <div class="stat-mini">
+              <span class="stat-mini-val" id="sideAccuracy">96%</span>
+              <span class="stat-mini-lbl">Accuracy</span>
+            </div>
+            <div class="stat-mini">
+              <span class="stat-mini-val text-cyan" id="sidePlasticity">0.85</span>
+              <span class="stat-mini-lbl">Plasticity</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CHAT & CONTENT AREA -->
+    <main class="main-content">
       
-      <!-- TAB 1: Dialogue & Evolution -->
-      <section id="chat-tab" class="tab-content active">
-        <div class="chat-layout">
-          <!-- Left: Active Chat Window -->
-          <div class="chat-pane glass-panel">
-            <div class="pane-header">
-              <div class="pane-title">
-                <i data-lucide="bot" class="text-cyan"></i>
-                <span>CogniPulse Synaptic Stream</span>
-              </div>
-              <div class="chat-controls">
-                <button class="btn-icon" id="btnClearChat" title="Clear Dialogue">
-                  <i data-lucide="trash-2"></i>
-                </button>
-              </div>
-            </div>
+      <!-- Top Minimal Header -->
+      <header class="chat-header">
+        <div class="header-left">
+          <button class="btn-sidebar-open" id="btnOpenSidebarMobile">
+            <i data-lucide="menu"></i>
+          </button>
+          <div class="model-badge">
+            <span class="model-title">CogniPulse</span>
+            <span class="model-sub">Adaptive Core v1.0</span>
+            <i data-lucide="chevron-down" class="badge-chevron"></i>
+          </div>
+        </div>
+        
+        <div class="header-right">
+          <button class="btn-pill-action" id="btnHeaderTeach">
+            <i data-lucide="sparkles"></i>
+            <span>Teach Fact</span>
+          </button>
+          <button class="btn-pill-action" id="btnHeaderBrainView">
+            <i data-lucide="activity"></i>
+            <span>Neural Visualizer</span>
+          </button>
+        </div>
+      </header>
 
-            <!-- Messages Log -->
-            <div class="messages-container" id="messagesContainer">
-              <div class="message-card system-message">
-                <div class="msg-avatar"><i data-lucide="sparkles"></i></div>
-                <div class="msg-content">
-                  <p><strong>CogniPulse Initialized.</strong> I am an autonomous self-learning AI model. Every interaction strengthens my synaptic pathways. You can chat with me, teach me new truths, or correct my reasoning to see my brain adapt in real time.</p>
+      <!-- VIEW 1: Modern Chat Container -->
+      <div id="chat-view" class="view-panel active">
+        <div class="chat-messages-scroll" id="chatMessagesScroll">
+          
+          <!-- Hero Banner (Shows when chat is empty) -->
+          <div class="hero-container" id="heroWelcome">
+            <div class="hero-logo">
+              <i data-lucide="brain-circuit"></i>
+            </div>
+            <h1 class="hero-heading">How can I learn and assist you today?</h1>
+            <p class="hero-subtext">CogniPulse is an autonomous self-evolving AI model. It remembers facts, forms concept graphs, and improves its reasoning with every message.</p>
+
+            <div class="suggestion-grid">
+              <div class="suggestion-card" data-prompt="Who are you and what makes CogniPulse unique?">
+                <i data-lucide="sparkles" class="sug-icon text-cyan"></i>
+                <div class="sug-text">
+                  <strong>Introduce Yourself</strong>
+                  <span>Learn about CogniPulse's self-learning architecture</span>
                 </div>
               </div>
-            </div>
-
-            <!-- Chat Input Box -->
-            <div class="chat-input-wrapper">
-              <div class="input-glow-box">
-                <textarea id="chatInput" placeholder="Ask CogniPulse anything, teach a fact ('Remember that...'), or test reasoning..." rows="1"></textarea>
-                <button id="btnSendChat" class="btn-send" title="Send Stimulus">
-                  <i data-lucide="send"></i>
-                </button>
-              </div>
-              <div class="input-quick-prompts">
-                <span class="prompt-tag" data-prompt="Who are you and what makes CogniPulse unique?">Who are you?</span>
-                <span class="prompt-tag" data-prompt="How does your continuous Hebbian memory work?">How do you learn?</span>
-                <span class="prompt-tag" data-prompt="Remember that the speed of light in vacuum is approximately 299,792 km/s.">Teach Light Speed</span>
-                <span class="prompt-tag" data-prompt="What concepts are currently in your knowledge graph?">Explore Graph</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right: Cognitive Inspection & Thought Stream -->
-          <div class="cognition-pane glass-panel">
-            <div class="pane-header">
-              <div class="pane-title">
-                <i data-lucide="layers" class="text-purple"></i>
-                <span>Real-Time Cognitive Stream</span>
-              </div>
-              <span class="latency-tag" id="lastLatency">0.00 ms</span>
-            </div>
-
-            <div class="thought-scroll-area" id="thoughtStreamArea">
-              <div class="empty-state">
-                <i data-lucide="eye" class="empty-icon"></i>
-                <p>Send a message to inspect CogniPulse's live associative memory recall, heuristic checks, and synaptic activations.</p>
-              </div>
-            </div>
-
-            <!-- Memory Resonance Preview -->
-            <div class="recalled-memories-preview" id="recalledMemoriesBox">
-              <div class="sub-header">
-                <i data-lucide="database" class="sub-icon"></i> Activated Synapses
-              </div>
-              <div id="recalledNodesList" class="recalled-nodes-list">
-                <span class="text-muted text-sm">No active memory resonance yet.</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 2: 3D Neural Synapse Visualizer -->
-      <section id="neural-tab" class="tab-content">
-        <div class="neural-visualizer-container glass-panel">
-          <div class="canvas-overlay-header">
-            <div>
-              <h3><i data-lucide="activity" class="text-cyan"></i> Synaptic Neural Network Matrix</h3>
-              <p class="text-muted text-sm">Visualizing active memory nodes, Hebbian links, and electrical impulse firings in real-time.</p>
-            </div>
-            <div class="overlay-buttons">
-              <button class="btn-subtle" id="btnPulseSynapse"><i data-lucide="zap"></i> Trigger Neural Spark</button>
-              <button class="btn-subtle" id="btnResetCamera"><i data-lucide="refresh-cw"></i> Center Matrix</button>
-            </div>
-          </div>
-          <canvas id="neuralCanvas"></canvas>
-          <div class="canvas-legend">
-            <div class="legend-item"><span class="dot-legend dot-cyan"></span> Identity / Core</div>
-            <div class="legend-item"><span class="dot-legend dot-purple"></span> Learned Facts</div>
-            <div class="legend-item"><span class="dot-legend dot-emerald"></span> Concepts</div>
-            <div class="legend-item"><span class="dot-legend dot-amber"></span> Corrective Rules</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 3: Knowledge Graph Explorer -->
-      <section id="graph-tab" class="tab-content">
-        <div class="kg-container glass-panel">
-          <div class="pane-header">
-            <div>
-              <div class="pane-title">
-                <i data-lucide="share-2" class="text-emerald"></i>
-                <span>Autonomous Knowledge Graph</span>
-              </div>
-              <p class="text-muted text-sm">Entities and relational triples autonomously extracted and connected by CogniPulse.</p>
-            </div>
-            <div class="kg-search-box">
-              <input type="text" id="kgSearchInput" placeholder="Filter concept node...">
-            </div>
-          </div>
-          <canvas id="kgCanvas"></canvas>
-          <div class="kg-node-details" id="kgNodeDetails">
-            <div class="text-muted text-sm">Hover over or click any node to inspect conceptual relations and occurrence weight.</div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 4: Reinforcement Learning Lab -->
-      <section id="sim-tab" class="tab-content">
-        <div class="sim-layout">
-          <!-- Left: GridWorld Live Canvas -->
-          <div class="glass-panel sim-canvas-box">
-            <div class="pane-header">
-              <div class="pane-title">
-                <i data-lucide="compass" class="text-cyan"></i>
-                <span>GridWorld Self-Learning Environment</span>
-              </div>
-              <span class="badge-v1" id="simEpsilonBadge">ε (Exploration): 0.80</span>
-            </div>
-            <div class="grid-canvas-wrapper">
-              <canvas id="simCanvas" width="480" height="480"></canvas>
-            </div>
-            <div class="sim-controls-bar">
-              <button class="btn-glow-primary" id="btnSimStep"><i data-lucide="play"></i> Single Step</button>
-              <button class="btn-subtle" id="btnSimAutoPlay"><i data-lucide="fast-forward"></i> Auto Learn</button>
-              <button class="btn-subtle" id="btnSimTrainBatch"><i data-lucide="zap"></i> Batch Train (25 Ep)</button>
-              <button class="btn-subtle" id="btnSimReset"><i data-lucide="rotate-ccw"></i> Reset Agent</button>
-            </div>
-          </div>
-
-          <!-- Right: Policy & Reward Metrics -->
-          <div class="glass-panel sim-stats-box">
-            <div class="pane-header">
-              <div class="pane-title">
-                <i data-lucide="bar-chart-3" class="text-amber"></i>
-                <span>Policy Telemetry & Q-Values</span>
-              </div>
-            </div>
-
-            <div class="stat-grid-2">
-              <div class="stat-card">
-                <span class="stat-num text-cyan" id="simEpisodeVal">0</span>
-                <span class="stat-label">Episodes Completed</span>
-              </div>
-              <div class="stat-card">
-                <span class="stat-num text-emerald" id="simStepsVal">0</span>
-                <span class="stat-label">Total Step Actions</span>
-              </div>
-              <div class="stat-card">
-                <span class="stat-num text-purple" id="simLastRewardVal">0.0</span>
-                <span class="stat-label">Last Step Reward</span>
-              </div>
-              <div class="stat-card">
-                <span class="stat-num text-amber" id="simLossVal">0.0000</span>
-                <span class="stat-label">Bellman TD Error</span>
-              </div>
-            </div>
-
-            <div class="q-policy-display">
-              <div class="sub-header"><i data-lucide="cpu"></i> Active State Q-Action Vectors</div>
-              <div id="qTablePreview" class="q-matrix-preview">
-                <span class="text-muted text-sm">Agent navigating environment to optimize policy...</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- TAB 5: Document Digester / Knowledge Ingestion -->
-      <section id="ingest-tab" class="tab-content">
-        <div class="ingest-layout glass-panel">
-          <div class="pane-header">
-            <div>
-              <div class="pane-title">
-                <i data-lucide="file-plus" class="text-purple"></i>
-                <span>Autonomous Document Digester</span>
-              </div>
-              <p class="text-muted text-sm">Feed unstructured text, technical notes, or research summaries. CogniPulse will extract concepts and assimilate knowledge.</p>
-            </div>
-          </div>
-
-          <div class="ingest-body">
-            <textarea id="ingestTextInput" placeholder="Paste research notes, facts, or technical documentation here... (e.g. 'Photosynthesis is a process used by plants. Chloroplasts contain chlorophyll which absorbs sunlight...')" rows="7"></textarea>
-            
-            <div class="ingest-actions">
-              <button class="btn-glow-primary" id="btnIngestText">
-                <i data-lucide="binary"></i> Digest & Assimilate Into Brain
-              </button>
-              <button class="btn-subtle" id="btnLoadSampleDoc">
-                <i data-lucide="file-text"></i> Load Sample AI Paper Notes
-              </button>
-            </div>
-
-            <!-- Ingestion Results Display -->
-            <div class="ingest-results-box" id="ingestResultsBox" style="display:none;">
-              <div class="results-header text-emerald">
-                <i data-lucide="check-circle"></i> Knowledge Successfully Synthesized
-              </div>
-              <div class="results-grid">
-                <div class="res-col">
-                  <strong>Concepts Extracted:</strong>
-                  <div id="extractedConceptsTags" class="tag-cloud"></div>
+              <div class="suggestion-card" data-prompt="How does your continuous Hebbian memory work?">
+                <i data-lucide="cpu" class="sug-icon text-purple"></i>
+                <div class="sug-text">
+                  <strong>Hebbian Plasticity</strong>
+                  <span>Understand how synaptic weights adapt in real-time</span>
                 </div>
-                <div class="res-col">
-                  <strong>Discovered Triples:</strong>
-                  <ul id="extractedTriplesList" class="triples-list"></ul>
+              </div>
+              <div class="suggestion-card" data-prompt="Remember that the speed of light in vacuum is approximately 299,792 km/s.">
+                <i data-lucide="book-open" class="sug-icon text-emerald"></i>
+                <div class="sug-text">
+                  <strong>Teach Ground Truth</strong>
+                  <span>Inject a new scientific fact into my neural core</span>
+                </div>
+              </div>
+              <div class="suggestion-card" data-prompt="What concepts and relations are in your knowledge graph right now?">
+                <i data-lucide="share-2" class="sug-icon text-amber"></i>
+                <div class="sug-text">
+                  <strong>Explore Knowledge Graph</strong>
+                  <span>Inspect autonomous entity relations</span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
 
-      <!-- TAB 6: Telemetry & Rules -->
-      <section id="telemetry-tab" class="tab-content">
-        <div class="telemetry-layout">
-          <!-- Top Stats Row -->
-          <div class="glass-panel stats-banner">
-            <div class="stat-box">
-              <i data-lucide="shield-check" class="stat-icon text-emerald"></i>
-              <div>
-                <div class="stat-big-val" id="telAccuracy">96.4%</div>
-                <div class="stat-sub">Reasoning Accuracy</div>
+          <!-- Messages Stream -->
+          <div class="messages-list" id="messagesList"></div>
+        </div>
+
+        <!-- Floating Bottom Input Bar (ChatGPT/Claude style) -->
+        <div class="chat-input-container">
+          <div class="input-card">
+            <button class="btn-attach" id="btnQuickTeach" title="Teach Ground Truth">
+              <i data-lucide="sparkles"></i>
+            </button>
+            <button class="btn-attach" id="btnQuickIngest" title="Digest Notes / Document">
+              <i data-lucide="file-plus"></i>
+            </button>
+            <textarea id="chatInput" placeholder="Message CogniPulse, teach facts, or test reasoning..." rows="1"></textarea>
+            <button class="btn-send-main" id="btnSendChat" title="Send Message">
+              <i data-lucide="arrow-up"></i>
+            </button>
+          </div>
+          <div class="input-disclaimer">
+            CogniPulse continuously assimilates knowledge and adapts its synaptic weights from interactions.
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 2: 3D Neural Synapse Studio -->
+      <div id="brain-view" class="view-panel">
+        <div class="drawer-view-container">
+          <div class="drawer-header">
+            <div>
+              <h2><i data-lucide="activity" class="text-cyan"></i> 3D Neural Synaptic Core</h2>
+              <p>Visualizing active memory nodes, synaptic interlinks, and real-time firing impulses.</p>
+            </div>
+            <button class="btn-pill-action btn-close-view"><i data-lucide="arrow-left"></i> Back to Chat</button>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="neuralCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 3: Knowledge Graph -->
+      <div id="graph-view" class="view-panel">
+        <div class="drawer-view-container">
+          <div class="drawer-header">
+            <div>
+              <h2><i data-lucide="share-2" class="text-emerald"></i> Autonomous Knowledge Graph</h2>
+              <p>Entities and relational triples autonomously extracted and connected by CogniPulse.</p>
+            </div>
+            <button class="btn-pill-action btn-close-view"><i data-lucide="arrow-left"></i> Back to Chat</button>
+          </div>
+          <div class="canvas-wrapper">
+            <canvas id="kgCanvas"></canvas>
+          </div>
+          <div class="graph-details-bar" id="kgNodeDetails">
+            Hover over or click any node to inspect conceptual relations.
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 4: RL Simulation Lab -->
+      <div id="sim-view" class="view-panel">
+        <div class="drawer-view-container">
+          <div class="drawer-header">
+            <div>
+              <h2><i data-lucide="gamepad-2" class="text-amber"></i> Reinforcement Learning Lab</h2>
+              <p>Autonomous agent navigating dynamic GridWorld with live Q-value policy learning.</p>
+            </div>
+            <button class="btn-pill-action btn-close-view"><i data-lucide="arrow-left"></i> Back to Chat</button>
+          </div>
+          <div class="sim-grid-layout">
+            <div class="sim-left">
+              <canvas id="simCanvas" width="440" height="440"></canvas>
+              <div class="sim-actions-row">
+                <button class="btn-pill-action" id="btnSimStep"><i data-lucide="play"></i> Step</button>
+                <button class="btn-pill-action" id="btnSimAutoPlay"><i data-lucide="fast-forward"></i> Auto Learn</button>
+                <button class="btn-pill-action" id="btnSimTrainBatch"><i data-lucide="zap"></i> Train Batch (25 Ep)</button>
+                <button class="btn-pill-action" id="btnSimReset"><i data-lucide="rotate-ccw"></i> Reset</button>
               </div>
             </div>
-            <div class="stat-box">
-              <i data-lucide="thumbs-up" class="stat-icon text-cyan"></i>
-              <div>
-                <div class="stat-big-val" id="telReinforceCount">0</div>
-                <div class="stat-sub">Positive Reinforcements</div>
+            <div class="sim-right">
+              <div class="sim-metric-card">
+                <span class="sim-metric-val" id="simEpisodeVal">0</span>
+                <span class="sim-metric-lbl">Episodes</span>
               </div>
-            </div>
-            <div class="stat-box">
-              <i data-lucide="wrench" class="stat-icon text-amber"></i>
-              <div>
-                <div class="stat-big-val" id="telCorrectionsCount">0</div>
-                <div class="stat-sub">Corrections Applied</div>
+              <div class="sim-metric-card">
+                <span class="sim-metric-val" id="simStepsVal">0</span>
+                <span class="sim-metric-lbl">Steps</span>
               </div>
-            </div>
-            <div class="stat-box">
-              <i data-lucide="network" class="stat-icon text-purple"></i>
-              <div>
-                <div class="stat-big-val" id="telSynapsesCount">0</div>
-                <div class="stat-sub">Synaptic Interlinks</div>
+              <div class="sim-metric-card">
+                <span class="sim-metric-val text-amber" id="simLossVal">0.000</span>
+                <span class="sim-metric-lbl">TD Error</span>
               </div>
             </div>
           </div>
-
-          <!-- Rules & Memory Table -->
-          <div class="glass-panel rules-pane">
-            <div class="pane-header">
-              <div class="pane-title">
-                <i data-lucide="code" class="text-cyan"></i>
-                <span>Adaptive Rules & Evolutionary Heuristics</span>
-              </div>
-            </div>
-            <div class="table-responsive">
-              <table class="custom-table" id="rulesTable">
-                <thead>
-                  <tr>
-                    <th>Rule ID</th>
-                    <th>Trigger Pattern</th>
-                    <th>Action / Guidance</th>
-                    <th>Reward Weight</th>
-                    <th>Success Rate</th>
-                  </tr>
-                </thead>
-                <tbody id="rulesTableBody">
-                  <!-- Dynamically populated -->
-                </tbody>
-              </table>
-            </div>
-          </div>
         </div>
-      </section>
+      </div>
 
     </main>
+  </div>
 
-    <!-- Modal: Teach CogniPulse -->
-    <div class="modal-backdrop" id="teachModal">
-      <div class="modal-dialog glass-panel">
-        <div class="modal-header">
-          <div class="pane-title">
-            <i data-lucide="sparkles" class="text-cyan"></i>
-            <span>Teach Ground Truth to CogniPulse</span>
-          </div>
-          <button class="btn-close" id="btnCloseTeachModal">&times;</button>
-        </div>
-        <div class="modal-body">
-          <label>Fact / Knowledge Statement:</label>
-          <textarea id="modalFactText" placeholder="e.g. Earth is the third planet from the Sun and takes 365.25 days to orbit it." rows="3"></textarea>
-          
-          <label>Knowledge Category:</label>
-          <select id="modalFactCategory">
-            <option value="fact">Scientific / General Fact</option>
-            <option value="rule">Reasoning Rule / Heuristic</option>
-            <option value="identity">Identity & Core Belief</option>
-          </select>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-subtle" id="btnCancelTeach">Cancel</button>
-          <button class="btn-glow-primary" id="btnSubmitTeach"><i data-lucide="check"></i> Ingest Fact</button>
-        </div>
+  <!-- MODAL: Teach Fact -->
+  <div class="modal-backdrop" id="teachModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div class="modal-title"><i data-lucide="sparkles" class="text-cyan"></i> Teach CogniPulse</div>
+        <button class="btn-modal-close" id="btnCloseTeachModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label>Ground Truth / Fact:</label>
+        <textarea id="modalFactText" placeholder="e.g. Mitochondria are membrane-bound cell organelles that generate chemical energy (ATP)." rows="3"></textarea>
+        
+        <label>Category:</label>
+        <select id="modalFactCategory">
+          <option value="fact">Scientific / Factual Knowledge</option>
+          <option value="rule">Reasoning Rule / Heuristic</option>
+          <option value="identity">Identity & Core Belief</option>
+        </select>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-subtle" id="btnCancelTeach">Cancel</button>
+        <button class="btn-primary" id="btnSubmitTeach">Assimiliate Fact</button>
       </div>
     </div>
+  </div>
 
-    <!-- Modal: Correction Feedback -->
-    <div class="modal-backdrop" id="correctModal">
-      <div class="modal-dialog glass-panel">
-        <div class="modal-header">
-          <div class="pane-title">
-            <i data-lucide="wrench" class="text-amber"></i>
-            <span>Correct CogniPulse's Inference</span>
-          </div>
-          <button class="btn-close" id="btnCloseCorrectModal">&times;</button>
-        </div>
-        <div class="modal-body">
-          <p class="text-sm text-muted">Provide the correct ground truth. CogniPulse will penalize mistaken weights and synthesize an adaptive rule to avoid this error in the future.</p>
-          <label>Ground Truth Correction:</label>
-          <textarea id="modalCorrectionText" placeholder="What should the correct response or principle be?" rows="3"></textarea>
-        </div>
-        <div class="modal-footer">
-          <button class="btn-subtle" id="btnCancelCorrect">Cancel</button>
-          <button class="btn-glow-primary" id="btnSubmitCorrection"><i data-lucide="arrow-up-right"></i> Apply Correction</button>
-        </div>
+  <!-- MODAL: Ingest Document -->
+  <div class="modal-backdrop" id="ingestModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div class="modal-title"><i data-lucide="file-plus" class="text-purple"></i> Digest Document / Notes</div>
+        <button class="btn-modal-close" id="btnCloseIngestModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label>Paste Unstructured Text / Documentation:</label>
+        <textarea id="ingestTextInput" placeholder="Paste notes, articles, or research text here..." rows="5"></textarea>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-subtle" id="btnCancelIngest">Cancel</button>
+        <button class="btn-primary" id="btnSubmitIngest">Digest & Learn</button>
       </div>
     </div>
+  </div>
 
+  <!-- MODAL: Correction Feedback -->
+  <div class="modal-backdrop" id="correctModal">
+    <div class="modal-box">
+      <div class="modal-head">
+        <div class="modal-title"><i data-lucide="wrench" class="text-amber"></i> Correct Inference</div>
+        <button class="btn-modal-close" id="btnCloseCorrectModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-sm text-muted">Provide the correct ground truth. CogniPulse will penalize mistaken weights and synthesize an adaptive rule.</p>
+        <label>Ground Truth Correction:</label>
+        <textarea id="modalCorrectionText" placeholder="What should the correct response or rule be?" rows="3"></textarea>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-subtle" id="btnCancelCorrect">Cancel</button>
+        <button class="btn-primary" id="btnSubmitCorrection">Apply Correction</button>
+      </div>
+    </div>
   </div>
 
   <script src="neural_visualizer.js"></script>
