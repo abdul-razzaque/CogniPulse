@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let activeCorrectionContext = null;
   let isSimAutoRunning = false;
   let simAutoInterval = null;
+  let currentAttachedFiles = []; // [{ name, sizeFormatted, text }]
 
   // DOM Elements
   const sidebar = document.getElementById('sidebar');
@@ -33,11 +34,96 @@ document.addEventListener('DOMContentLoaded', () => {
   const chatInput = document.getElementById('chatInput');
   const btnSendChat = document.getElementById('btnSendChat');
 
+  // File Upload Elements
+  const btnUploadFile = document.getElementById('btnUploadFile');
+  const fileInput = document.getElementById('fileInput');
+  const attachedFilesContainer = document.getElementById('attachedFilesContainer');
+
   // Header quick buttons
   const btnHeaderTeach = document.getElementById('btnHeaderTeach');
   const btnHeaderBrainView = document.getElementById('btnHeaderBrainView');
   const btnQuickTeach = document.getElementById('btnQuickTeach');
   const btnQuickIngest = document.getElementById('btnQuickIngest');
+
+  // ==========================================
+  // File Upload & Attachment Handlers
+  // ==========================================
+  if (btnUploadFile && fileInput) {
+    btnUploadFile.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      handleFilesSelected(e.target.files);
+      fileInput.value = '';
+    });
+  }
+
+  // Drag & Drop onto Chat
+  window.addEventListener('dragover', (e) => {
+    e.preventDefault();
+  });
+
+  window.addEventListener('drop', (e) => {
+    e.preventDefault();
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      handleFilesSelected(e.dataTransfer.files);
+    }
+  });
+
+  function formatBytes(bytes) {
+    if (bytes < 1024) return bytes + ' B';
+    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    else return (bytes / 1048576).toFixed(1) + ' MB';
+  }
+
+  function handleFilesSelected(files) {
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const fileContent = event.target.result;
+        currentAttachedFiles.push({
+          name: file.name,
+          sizeFormatted: formatBytes(file.size),
+          text: fileContent
+        });
+        renderAttachedPills();
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  function renderAttachedPills() {
+    if (!attachedFilesContainer) return;
+    if (currentAttachedFiles.length === 0) {
+      attachedFilesContainer.style.display = 'none';
+      attachedFilesContainer.innerHTML = '';
+      return;
+    }
+
+    attachedFilesContainer.style.display = 'flex';
+    attachedFilesContainer.innerHTML = currentAttachedFiles.map((f, idx) => `
+      <div class="attached-file-pill">
+        <i data-lucide="file-code"></i>
+        <span class="file-pill-name">${escapeHtml(f.name)}</span>
+        <span class="file-pill-size">${f.sizeFormatted}</span>
+        <button class="file-pill-remove" data-idx="${idx}">&times;</button>
+      </div>
+    `).join('');
+
+    if (window.lucide) lucide.createIcons();
+
+    attachedFilesContainer.querySelectorAll('.file-pill-remove').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const idx = parseInt(e.target.getAttribute('data-idx'), 10);
+        currentAttachedFiles.splice(idx, 1);
+        renderAttachedPills();
+      });
+    });
+  }
+
 
   // Modals
   const teachModal = document.getElementById('teachModal');
@@ -154,15 +240,33 @@ document.addEventListener('DOMContentLoaded', () => {
   // 2. Chat Message Flow & Thought Accordion
   // ==========================================
   async function handleSendMessage(overrideText = null) {
-    const text = overrideText !== null ? overrideText.trim() : chatInput.value.trim();
-    if (!text) return;
+    let rawText = overrideText !== null ? overrideText.trim() : chatInput.value.trim();
+    
+    // If no text but files are attached, provide default prompt
+    if (!rawText && currentAttachedFiles.length > 0) {
+      rawText = "Please analyze and extract insights from the attached file(s).";
+    }
+
+    if (!rawText && currentAttachedFiles.length === 0) return;
+
+    // Snapshot attached files
+    const filesToUpload = [...currentAttachedFiles];
+    currentAttachedFiles = [];
+    renderAttachedPills();
+
+    // Prepare full query with file contents for CogniPulse
+    let fullQueryPayload = rawText;
+    if (filesToUpload.length > 0) {
+      const filesContext = filesToUpload.map(f => `--- FILE: ${f.name} ---\n${f.text}\n--- END OF FILE ---`).join('\n\n');
+      fullQueryPayload = `${filesContext}\n\nUser Question/Instruction: ${rawText}`;
+    }
 
     // Hide hero welcome
     heroWelcome.style.display = 'none';
 
-    // Append User Bubble with Edit / Copy / Retry controls
+    // Append User Bubble with attached file badges
     if (overrideText === null) {
-      appendUserMessage(text);
+      appendUserMessage(rawText, filesToUpload);
       chatInput.value = '';
       chatInput.style.height = 'auto';
     }
@@ -177,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const resp = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: text })
+        body: JSON.stringify({ query: fullQueryPayload })
       });
       const data = await resp.json();
 
@@ -190,7 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Render AI Message with Collapsible Thought Stream
-      appendAiMessage(data.response || 'Knowledge assimilated.', text, data);
+      appendAiMessage(data.response || 'Knowledge assimilated.', rawText, data);
 
       if (data.firing_event && data.firing_event.activated_memories) {
         neuralVis.triggerPulse(data.firing_event.activated_memories);
@@ -203,12 +307,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function appendUserMessage(content) {
+  function appendUserMessage(content, attachedFiles = []) {
     const row = document.createElement('div');
     row.className = 'chat-row-user';
 
+    let filesBadgesHtml = '';
+    if (attachedFiles && attachedFiles.length > 0) {
+      filesBadgesHtml = attachedFiles.map(f => `
+        <div class="user-attached-file-badge">
+          <i data-lucide="file-code"></i> ${escapeHtml(f.name)} (${f.sizeFormatted})
+        </div>
+      `).join('');
+    }
+
     row.innerHTML = `
-      <div class="user-bubble">${escapeHtml(content).replace(/\n/g, '<br/>')}</div>
+      <div class="user-bubble">
+        ${filesBadgesHtml}
+        ${escapeHtml(content).replace(/\n/g, '<br/>')}
+      </div>
       <div class="user-actions-bar">
         <button class="btn-user-action btn-edit-msg" title="Edit Question">
           <i data-lucide="edit-3"></i> Edit
@@ -225,6 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
     messagesList.appendChild(row);
     if (window.lucide) lucide.createIcons();
     scrollToBottom();
+
 
     // 1. Copy User Message
     const btnCopy = row.querySelector('.btn-copy-user-msg');

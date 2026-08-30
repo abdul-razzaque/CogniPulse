@@ -180,22 +180,32 @@
 
         <!-- Floating Bottom Input Bar (ChatGPT/Claude style) -->
         <div class="chat-input-container">
+          <!-- Attached Files Preview Box -->
+          <div class="attached-files-container" id="attachedFilesContainer" style="display:none;"></div>
+
           <div class="input-card">
+            <!-- Hidden File Input -->
+            <input type="file" id="fileInput" accept=".txt,.md,.json,.csv,.py,.js,.html,.css,.xml,.pdf,.log" multiple style="display:none;">
+            
+            <button class="btn-attach" id="btnUploadFile" title="Attach Document / Code File (.txt, .pdf, .py, .json, .csv)">
+              <i data-lucide="paperclip"></i>
+            </button>
             <button class="btn-attach" id="btnQuickTeach" title="Teach Ground Truth">
               <i data-lucide="sparkles"></i>
             </button>
-            <button class="btn-attach" id="btnQuickIngest" title="Digest Notes / Document">
-              <i data-lucide="file-plus"></i>
+            <button class="btn-attach" id="btnQuickIngest" title="Paste Raw Notes">
+              <i data-lucide="file-text"></i>
             </button>
-            <textarea id="chatInput" placeholder="Message CogniPulse, teach facts, or test reasoning..." rows="1"></textarea>
+            <textarea id="chatInput" placeholder="Ask CogniPulse, analyze attached files, teach facts..." rows="1"></textarea>
             <button class="btn-send-main" id="btnSendChat" title="Send Message">
               <i data-lucide="arrow-up"></i>
             </button>
           </div>
           <div class="input-disclaimer">
-            CogniPulse continuously assimilates knowledge and adapts its synaptic weights from interactions.
+            CogniPulse can read, analyze, and learn from uploaded documents, code files, and datasets.
           </div>
         </div>
+
       </div>
 
       <!-- VIEW 2: 3D Neural Synapse Studio -->

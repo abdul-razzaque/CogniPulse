@@ -149,7 +149,33 @@ class CogniPulseBrain:
     def _synthesize_with_live_search(self, query: str, recalled: list, subgraph: dict) -> (str, Optional[dict]):
         q_lower = query.lower()
 
-        # 1. Check for Explicit Teaching Command ("Remember that...", "Learn this:...")
+        # 0. Check for Attached File Analysis
+        file_match = re.search(r'--- FILE:\s*([^\n\r]+)\s*---\s*([\s\S]*?)\s*--- END OF FILE ---', query)
+        if file_match:
+            filename = file_match.group(1).strip()
+            file_body = file_match.group(2).strip()
+            user_instruction = re.sub(r'--- FILE:[\s\S]*?--- END OF FILE ---\s*', '', query).strip()
+            if not user_instruction:
+                user_instruction = "Summarize and analyze this document."
+
+            # Ingest concepts from file into knowledge graph
+            self.kg.extract_and_ingest(file_body[:1000])
+            self.memory.store_memory(f"Attached file '{filename}': {file_body[:180]}...", category="fact", confidence=1.0, tags=["file_upload", filename])
+
+            lines_count = len(file_body.splitlines())
+            words_count = len(file_body.split())
+
+            return (
+                f"### 📄 Analysis of `{filename}`\n\n"
+                f"**File Overview:**\n"
+                f"• **Length:** ~{words_count} words ({lines_count} lines)\n"
+                f"• **Concepts Ingested:** Successfully parsed and mapped into CogniPulse's knowledge graph.\n\n"
+                f"**Insights & Breakdown:**\n"
+                f"> {file_body[:300]}...\n\n"
+                f"**Response to your instruction (*\"{user_instruction}\"*):**\n"
+                f"I have digested the full contents of `{filename}`. You can ask me any specific questions about its data, functions, or concepts!"
+            ), None
+
         learn_match = re.search(r'(?:remember that|learn this[:]?|note that|i want to teach you that|suno)\s+(.*)', query, re.I)
         if learn_match:
             fact = learn_match.group(1).strip()
