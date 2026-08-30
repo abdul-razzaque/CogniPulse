@@ -1,69 +1,311 @@
 /**
- * CogniPulse - Modern AI Studio Controller (Claude/Gemini/ChatGPT Style)
+ * CogniPulse - Full Claude AI Frontend Engine
+ * Includes Conversations Manager, Model Selector, Artifacts Split Canvas, and Live Web Grounding.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
-  if (window.lucide) {
-    lucide.createIcons();
-  }
+  // ==========================================
+  // 1. App State & Persistence
+  // ==========================================
+  let conversations = JSON.parse(localStorage.getItem('cognipulse_conversations') || '[]');
+  let activeConvId = localStorage.getItem('cognipulse_active_conv_id') || null;
+  let currentModel = localStorage.getItem('cognipulse_model') || 'sonnet-3.7';
+  let isWebSearchEnabled = true;
+  let currentAttachedFiles = []; // [{ name, sizeFormatted, text }]
+  let activeArtifact = null; // { title, type, code }
 
-  // Visualizer instances
+  // Visualizers
   const neuralVis = new NeuralVisualizer('neuralCanvas');
-  const kgViewer = new KnowledgeGraphViewer('kgCanvas', 'kgNodeDetails');
+  const kgViewer = new KnowledgeGraphViewer('graphCanvas');
   const simViewer = new SimulationViewer('simCanvas');
 
-  // State
-  let activeCorrectionContext = null;
-  let isSimAutoRunning = false;
-  let simAutoInterval = null;
-  let currentAttachedFiles = []; // [{ name, sizeFormatted, text }]
-
   // DOM Elements
+  const appLayout = document.getElementById('appLayout');
   const sidebar = document.getElementById('sidebar');
   const btnToggleSidebar = document.getElementById('btnToggleSidebar');
   const btnOpenSidebarMobile = document.getElementById('btnOpenSidebarMobile');
   const btnNewChat = document.getElementById('btnNewChat');
+  const inputSearchChats = document.getElementById('inputSearchChats');
+  const conversationsList = document.getElementById('conversationsList');
 
-  const navItems = document.querySelectorAll('.nav-item');
-  const viewPanels = document.querySelectorAll('.view-panel');
-  const btnCloseViews = document.querySelectorAll('.btn-close-view');
+  // Model Dropdown Elements
+  const btnModelDropdown = document.getElementById('btnModelDropdown');
+  const modelDropdownMenu = document.getElementById('modelDropdownMenu');
+  const selectedModelLabel = document.getElementById('selectedModelLabel');
+  const inputModelPill = document.getElementById('inputModelPill');
+  const modelOptions = document.querySelectorAll('.model-option');
 
+  // Chat Elements
   const heroWelcome = document.getElementById('heroWelcome');
   const messagesList = document.getElementById('messagesList');
   const chatMessagesScroll = document.getElementById('chatMessagesScroll');
   const chatInput = document.getElementById('chatInput');
   const btnSendChat = document.getElementById('btnSendChat');
-
-  // File Upload Elements
   const btnUploadFile = document.getElementById('btnUploadFile');
   const fileInput = document.getElementById('fileInput');
   const attachedFilesContainer = document.getElementById('attachedFilesContainer');
+  const btnToggleWebSearch = document.getElementById('btnToggleWebSearch');
 
-  // Header quick buttons
+  // Artifacts Canvas Drawer Elements
+  const artifactsCanvasDrawer = document.getElementById('artifactsCanvasDrawer');
+  const artifactTitle = document.getElementById('artifactTitle');
+  const artifactTypeBadge = document.getElementById('artifactTypeBadge');
+  const btnTabPreview = document.getElementById('btnTabPreview');
+  const btnTabCode = document.getElementById('btnTabCode');
+  const canvasPreviewPane = document.getElementById('canvasPreviewPane');
+  const canvasCodePane = document.getElementById('canvasCodePane');
+  const artifactIframe = document.getElementById('artifactIframe');
+  const artifactCodeContent = document.getElementById('artifactCodeContent');
+  const btnCopyArtifactCode = document.getElementById('btnCopyArtifactCode');
+  const btnDownloadArtifact = document.getElementById('btnDownloadArtifact');
+  const btnFullscreenArtifact = document.getElementById('btnFullscreenArtifact');
+  const btnCloseArtifactsCanvas = document.getElementById('btnCloseArtifactsCanvas');
+
+  // Navigation & Views
+  const navItems = document.querySelectorAll('.nav-item');
+  const viewPanels = document.querySelectorAll('.view-panel');
+  const btnCloseViews = document.querySelectorAll('.btn-close-view');
+
+  // Modals
+  const aiSettingsModal = document.getElementById('aiSettingsModal');
+  const btnHeaderAiSettings = document.getElementById('btnHeaderAiSettings');
+  const btnSidebarAiSettings = document.getElementById('btnSidebarAiSettings');
+  const btnCloseAiSettingsModal = document.getElementById('btnCloseAiSettingsModal');
+  const aiProviderSelect = document.getElementById('aiProviderSelect');
+  const inputCustomApiKey = document.getElementById('inputCustomApiKey');
+  const btnSaveAiSettings = document.getElementById('btnSaveAiSettings');
+  const btnClearApiKey = document.getElementById('btnClearApiKey');
+
+  const teachModal = document.getElementById('teachModal');
   const btnHeaderTeach = document.getElementById('btnHeaderTeach');
-  const btnHeaderBrainView = document.getElementById('btnHeaderBrainView');
-  const btnQuickTeach = document.getElementById('btnQuickTeach');
-  const btnQuickIngest = document.getElementById('btnQuickIngest');
+  const btnSidebarTeach = document.getElementById('btnSidebarTeach');
+  const btnCloseTeachModal = document.getElementById('btnCloseTeachModal');
+  const btnCancelTeach = document.getElementById('btnCancelTeach');
+  const btnSubmitTeach = document.getElementById('btnSubmitTeach');
+  const modalFactText = document.getElementById('modalFactText');
+  const modalFactCategory = document.getElementById('modalFactCategory');
 
   // ==========================================
-  // File Upload & Attachment Handlers
+  // 2. Sidebar & Navigation Logic
   // ==========================================
-  if (btnUploadFile && fileInput) {
-    btnUploadFile.addEventListener('click', () => {
-      fileInput.click();
+  if (btnToggleSidebar) {
+    btnToggleSidebar.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+    });
+  }
+
+  if (btnOpenSidebarMobile) {
+    btnOpenSidebarMobile.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+    });
+  }
+
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const targetView = item.getAttribute('data-view');
+      navItems.forEach(n => n.classList.remove('active'));
+      item.classList.add('active');
+
+      viewPanels.forEach(p => {
+        p.classList.toggle('active', p.id === targetView);
+      });
+
+      if (targetView === 'neural-view') neuralVis.start();
+      if (targetView === 'graph-view') kgViewer.start();
+      if (targetView === 'sim-view') simViewer.start();
+    });
+  });
+
+  btnCloseViews.forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelector('.nav-item[data-view="chat-view"]').click();
+    });
+  });
+
+  // ==========================================
+  // 3. Claude Model Selector
+  // ==========================================
+  const modelLabels = {
+    'sonnet-3.7': 'CogniPulse 3.7 Sonnet',
+    'haiku-3.5': 'CogniPulse 3.5 Haiku',
+    'opus-3': 'CogniPulse Opus'
+  };
+
+  const modelShortPills = {
+    'sonnet-3.7': 'Sonnet 3.7',
+    'haiku-3.5': 'Haiku 3.5',
+    'opus-3': 'Opus 3'
+  };
+
+  function updateSelectedModel(modelKey) {
+    currentModel = modelKey;
+    localStorage.setItem('cognipulse_model', modelKey);
+    selectedModelLabel.textContent = modelLabels[modelKey] || 'CogniPulse 3.7 Sonnet';
+    inputModelPill.textContent = modelShortPills[modelKey] || 'Sonnet 3.7';
+    modelOptions.forEach(opt => {
+      opt.classList.toggle('active', opt.getAttribute('data-model') === modelKey);
+    });
+  }
+
+  updateSelectedModel(currentModel);
+
+  btnModelDropdown.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isVisible = modelDropdownMenu.style.display === 'flex';
+    modelDropdownMenu.style.display = isVisible ? 'none' : 'flex';
+  });
+
+  document.addEventListener('click', () => {
+    if (modelDropdownMenu) modelDropdownMenu.style.display = 'none';
+  });
+
+  modelOptions.forEach(opt => {
+    opt.addEventListener('click', () => {
+      const m = opt.getAttribute('data-model');
+      updateSelectedModel(m);
+      modelDropdownMenu.style.display = 'none';
+    });
+  });
+
+  // ==========================================
+  // 4. Conversation History Management (Claude style)
+  // ==========================================
+  function createNewConversation() {
+    const newConv = {
+      id: 'conv_' + Date.now(),
+      title: 'New Conversation',
+      timestamp: Date.now(),
+      messages: []
+    };
+    conversations.unshift(newConv);
+    activeConvId = newConv.id;
+    saveConversations();
+    renderConversationsList();
+    loadActiveConversation();
+    chatInput.focus();
+  }
+
+  function saveConversations() {
+    localStorage.setItem('cognipulse_conversations', JSON.stringify(conversations));
+    localStorage.setItem('cognipulse_active_conv_id', activeConvId);
+  }
+
+  function renderConversationsList() {
+    if (!conversationsList) return;
+    const searchFilter = (inputSearchChats ? inputSearchChats.value.trim().toLowerCase() : '');
+
+    const filtered = conversations.filter(c => !searchFilter || c.title.toLowerCase().includes(searchFilter));
+
+    if (filtered.length === 0) {
+      conversationsList.innerHTML = `<div style="padding: 10px; font-size: 11.5px; color: var(--text-dim);">No conversations yet.</div>`;
+      return;
+    }
+
+    conversationsList.innerHTML = filtered.map(c => `
+      <div class="conversation-item ${c.id === activeConvId ? 'active' : ''}" data-id="${c.id}">
+        <div class="conv-title-wrap">
+          <i data-lucide="message-square"></i>
+          <span class="conv-title-text">${escapeHtml(c.title)}</span>
+        </div>
+        <button class="conv-delete-btn" title="Delete Conversation" data-id="${c.id}">
+          <i data-lucide="trash-2"></i>
+        </button>
+      </div>
+    `).join('');
+
+    if (window.lucide) lucide.createIcons();
+
+    conversationsList.querySelectorAll('.conversation-item').forEach(item => {
+      item.addEventListener('click', (e) => {
+        if (e.target.closest('.conv-delete-btn')) return;
+        const id = item.getAttribute('data-id');
+        activeConvId = id;
+        saveConversations();
+        renderConversationsList();
+        loadActiveConversation();
+      });
     });
 
+    conversationsList.querySelectorAll('.conv-delete-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-id');
+        conversations = conversations.filter(c => c.id !== id);
+        if (activeConvId === id) {
+          activeConvId = conversations.length > 0 ? conversations[0].id : null;
+        }
+        saveConversations();
+        renderConversationsList();
+        loadActiveConversation();
+      });
+    });
+  }
+
+  function loadActiveConversation() {
+    messagesList.innerHTML = '';
+    closeArtifactsCanvas();
+
+    const activeConv = conversations.find(c => c.id === activeConvId);
+    if (!activeConv || !activeConv.messages || activeConv.messages.length === 0) {
+      heroWelcome.style.display = 'flex';
+      return;
+    }
+
+    heroWelcome.style.display = 'none';
+    activeConv.messages.forEach(msg => {
+      if (msg.role === 'user') {
+        appendUserMessageDOM(msg.content, msg.attachedFiles || [], false);
+      } else {
+        appendAiMessageDOM(msg.content, msg.fullData || {}, false);
+      }
+    });
+    scrollToBottom();
+  }
+
+  btnNewChat.addEventListener('click', createNewConversation);
+
+  // Keyboard shortcut Ctrl+K / Cmd+K for New Chat
+  window.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+      e.preventDefault();
+      createNewConversation();
+    }
+  });
+
+  if (inputSearchChats) {
+    inputSearchChats.addEventListener('input', renderConversationsList);
+  }
+
+  // Suggestion Cards
+  document.querySelectorAll('.suggestion-card').forEach(card => {
+    card.addEventListener('click', () => {
+      const prompt = card.getAttribute('data-prompt');
+      chatInput.value = prompt;
+      handleSendMessage();
+    });
+  });
+
+  // Web Search Toggle
+  if (btnToggleWebSearch) {
+    btnToggleWebSearch.addEventListener('click', () => {
+      isWebSearchEnabled = !isWebSearchEnabled;
+      btnToggleWebSearch.classList.toggle('active', isWebSearchEnabled);
+      btnToggleWebSearch.title = isWebSearchEnabled ? "Live Web Search: ON" : "Live Web Search: OFF";
+    });
+  }
+
+  // ==========================================
+  // 5. File Upload & PDF Document Handling
+  // ==========================================
+  if (btnUploadFile && fileInput) {
+    btnUploadFile.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', (e) => {
       handleFilesSelected(e.target.files);
       fileInput.value = '';
     });
   }
 
-  // Drag & Drop onto Chat
-  window.addEventListener('dragover', (e) => {
-    e.preventDefault();
-  });
-
+  window.addEventListener('dragover', (e) => e.preventDefault());
   window.addEventListener('drop', (e) => {
     e.preventDefault();
     if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
@@ -73,17 +315,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function formatBytes(bytes) {
     if (bytes < 1024) return bytes + ' B';
-    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-    else return (bytes / 1048576).toFixed(1) + ' MB';
+    if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / 1048576).toFixed(1) + ' MB';
   }
 
   async function handleFilesSelected(files) {
     if (!files || files.length === 0) return;
 
     for (const file of Array.from(files)) {
-      const fileNameLower = file.name.toLowerCase();
-
-      if (fileNameLower.endsWith('.pdf')) {
+      const isPdf = file.name.toLowerCase().endsWith('.pdf');
+      if (isPdf) {
         try {
           const arrayBuffer = await file.arrayBuffer();
           const pdfjs = window.pdfjsLib || window['pdfjs-dist/build/pdf'];
@@ -92,43 +333,34 @@ document.addEventListener('DOMContentLoaded', () => {
             const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
             const pdfDoc = await loadingTask.promise;
             let fullText = '';
-            for (let i = 1; i <= Math.min(pdfDoc.numPages, 25); i++) {
+            for (let i = 1; i <= Math.min(pdfDoc.numPages, 20); i++) {
               const page = await pdfDoc.getPage(i);
-              const textContent = await page.getTextContent();
-              const pageStrings = textContent.items.map(item => item.str).join(' ');
-              fullText += `[Page ${i}]\n${pageStrings}\n\n`;
+              const content = await page.getTextContent();
+              const pageStr = content.items.map(item => item.str).join(' ');
+              fullText += `[Page ${i}]\n${pageStr}\n\n`;
             }
             currentAttachedFiles.push({
               name: file.name,
               sizeFormatted: formatBytes(file.size),
-              text: fullText.trim() || `[PDF Document: ${file.name} - ${pdfDoc.numPages} Pages]`
-            });
-            renderAttachedPills();
-          } else {
-            currentAttachedFiles.push({
-              name: file.name,
-              sizeFormatted: formatBytes(file.size),
-              text: `[PDF Document: ${file.name}]`
+              text: fullText.trim() || `[Document: ${file.name}]`
             });
             renderAttachedPills();
           }
         } catch (err) {
-          console.error("PDF Parsing Error:", err);
           currentAttachedFiles.push({
             name: file.name,
             sizeFormatted: formatBytes(file.size),
-            text: `[PDF Document: ${file.name}]`
+            text: `[Document: ${file.name}]`
           });
           renderAttachedPills();
         }
       } else {
-        // Plain text, code, JSON, CSV, Markdown, etc.
         const reader = new FileReader();
-        reader.onload = (event) => {
+        reader.onload = (e) => {
           currentAttachedFiles.push({
             name: file.name,
             sizeFormatted: formatBytes(file.size),
-            text: event.target.result
+            text: e.target.result
           });
           renderAttachedPills();
         };
@@ -136,7 +368,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   }
-
 
   function renderAttachedPills() {
     if (!attachedFilesContainer) return;
@@ -167,107 +398,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-
-  // Modals
-  const teachModal = document.getElementById('teachModal');
-  const btnCloseTeachModal = document.getElementById('btnCloseTeachModal');
-  const btnCancelTeach = document.getElementById('btnCancelTeach');
-  const btnSubmitTeach = document.getElementById('btnSubmitTeach');
-  const modalFactText = document.getElementById('modalFactText');
-  const modalFactCategory = document.getElementById('modalFactCategory');
-
-  const ingestModal = document.getElementById('ingestModal');
-  const btnCloseIngestModal = document.getElementById('btnCloseIngestModal');
-  const btnCancelIngest = document.getElementById('btnCancelIngest');
-  const btnSubmitIngest = document.getElementById('btnSubmitIngest');
-  const ingestTextInput = document.getElementById('ingestTextInput');
-
-  const correctModal = document.getElementById('correctModal');
-  const btnCloseCorrectModal = document.getElementById('btnCloseCorrectModal');
-  const btnCancelCorrect = document.getElementById('btnCancelCorrect');
-  const btnSubmitCorrection = document.getElementById('btnSubmitCorrection');
-  const modalCorrectionText = document.getElementById('modalCorrectionText');
-
-  // Sim buttons
-  const btnSimStep = document.getElementById('btnSimStep');
-  const btnSimAutoPlay = document.getElementById('btnSimAutoPlay');
-  const btnSimTrainBatch = document.getElementById('btnSimTrainBatch');
-  const btnSimReset = document.getElementById('btnSimReset');
-
-  // ==========================================
-  // 1. Sidebar & View Switching
-  // ==========================================
-  if (btnToggleSidebar) {
-    btnToggleSidebar.addEventListener('click', () => {
-      sidebar.classList.toggle('collapsed');
-    });
-  }
-
-  if (btnOpenSidebarMobile) {
-    btnOpenSidebarMobile.addEventListener('click', () => {
-      sidebar.classList.toggle('collapsed');
-    });
-  }
-
-  function switchView(viewId) {
-    navItems.forEach(item => {
-      if (item.getAttribute('data-view') === viewId) {
-        item.classList.add('active');
-      } else {
-        item.classList.remove('active');
-      }
-    });
-
-    viewPanels.forEach(panel => {
-      if (panel.id === viewId) {
-        panel.classList.add('active');
-      } else {
-        panel.classList.remove('active');
-      }
-    });
-
-    if (viewId === 'brain-view') neuralVis.initCanvas();
-    if (viewId === 'graph-view') kgViewer.initCanvas();
-  }
-
-  navItems.forEach(item => {
-    item.addEventListener('click', () => {
-      switchView(item.getAttribute('data-view'));
-    });
-  });
-
-  btnCloseViews.forEach(btn => {
-    btn.addEventListener('click', () => {
-      switchView('chat-view');
-    });
-  });
-
-  if (btnHeaderBrainView) {
-    btnHeaderBrainView.addEventListener('click', () => {
-      switchView('brain-view');
-    });
-  }
-
-  // New Chat
-  btnNewChat.addEventListener('click', () => {
-    messagesList.innerHTML = '';
-    heroWelcome.style.display = 'flex';
-    switchView('chat-view');
-  });
-
-  // Suggestion Cards Click
-  document.querySelectorAll('.suggestion-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const prompt = card.getAttribute('data-prompt');
-      chatInput.value = prompt;
-      handleSendMessage();
-    });
-  });
-
-  // Auto-expanding textarea
+  // Auto-grow textarea
   chatInput.addEventListener('input', () => {
     chatInput.style.height = 'auto';
-    chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+    chatInput.style.height = Math.min(chatInput.scrollHeight, 180) + 'px';
   });
 
   chatInput.addEventListener('keydown', (e) => {
@@ -277,103 +411,67 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  btnSendChat.addEventListener('click', handleSendMessage);
-
-  // AI Settings Elements & Modals
-  const aiSettingsModal = document.getElementById('aiSettingsModal');
-  const btnOpenAiSettings = document.getElementById('btnOpenAiSettings');
-  const btnCloseAiSettingsModal = document.getElementById('btnCloseAiSettingsModal');
-  const aiProviderSelect = document.getElementById('aiProviderSelect');
-  const inputCustomApiKey = document.getElementById('inputCustomApiKey');
-  const btnSaveAiSettings = document.getElementById('btnSaveAiSettings');
-  const btnClearApiKey = document.getElementById('btnClearApiKey');
-
-  // Load saved settings
-  const savedProvider = localStorage.getItem('cognipulse_ai_provider') || 'auto';
-  const savedApiKey = localStorage.getItem('cognipulse_api_key') || '';
-  if (aiProviderSelect) aiProviderSelect.value = savedProvider;
-  if (inputCustomApiKey) inputCustomApiKey.value = savedApiKey;
-
-  if (btnOpenAiSettings && aiSettingsModal) {
-    btnOpenAiSettings.addEventListener('click', () => {
-      aiSettingsModal.style.display = 'flex';
-      if (inputCustomApiKey) inputCustomApiKey.value = localStorage.getItem('cognipulse_api_key') || '';
-      if (aiProviderSelect) aiProviderSelect.value = localStorage.getItem('cognipulse_ai_provider') || 'auto';
-    });
-  }
-
-  if (btnCloseAiSettingsModal && aiSettingsModal) {
-    btnCloseAiSettingsModal.addEventListener('click', () => {
-      aiSettingsModal.style.display = 'none';
-    });
-  }
-
-  if (btnSaveAiSettings) {
-    btnSaveAiSettings.addEventListener('click', () => {
-      const p = aiProviderSelect ? aiProviderSelect.value : 'auto';
-      const k = inputCustomApiKey ? inputCustomApiKey.value.trim() : '';
-      localStorage.setItem('cognipulse_ai_provider', p);
-      if (k) {
-        localStorage.setItem('cognipulse_api_key', k);
-      } else {
-        localStorage.removeItem('cognipulse_api_key');
-      }
-      aiSettingsModal.style.display = 'none';
-      alert('AI Engine settings saved successfully!');
-    });
-  }
-
-  if (btnClearApiKey) {
-    btnClearApiKey.addEventListener('click', () => {
-      localStorage.removeItem('cognipulse_api_key');
-      if (inputCustomApiKey) inputCustomApiKey.value = '';
-      alert('API Key cleared.');
-    });
-  }
+  btnSendChat.addEventListener('click', () => handleSendMessage());
 
   // ==========================================
-  // 2. Chat Message Flow & Thought Accordion
+  // 6. Chat Message Pipeline & API Inference
   // ==========================================
   async function handleSendMessage(overrideText = null) {
     let rawText = overrideText !== null ? overrideText.trim() : chatInput.value.trim();
-    
-    // If no text but files are attached, provide default prompt
+
     if (!rawText && currentAttachedFiles.length > 0) {
-      rawText = "Please analyze and extract insights from the attached file(s).";
+      rawText = "Please analyze and simplify the attached document.";
     }
 
     if (!rawText && currentAttachedFiles.length === 0) return;
 
-    // Snapshot attached files
+    if (!activeConvId) {
+      createNewConversation();
+    }
+
     const filesToUpload = [...currentAttachedFiles];
     currentAttachedFiles = [];
     renderAttachedPills();
 
-    // Prepare full query with file contents for CogniPulse
+    // Prepare full query with document context if present
     let fullQueryPayload = rawText;
     if (filesToUpload.length > 0) {
       const filesContext = filesToUpload.map(f => `--- FILE: ${f.name} ---\n${f.text}\n--- END OF FILE ---`).join('\n\n');
-      fullQueryPayload = `${filesContext}\n\nUser Question/Instruction: ${rawText}`;
+      fullQueryPayload = `${filesContext}\n\nUser Instruction: ${rawText}`;
     }
 
-    // Hide hero welcome
+    // Hide hero
     heroWelcome.style.display = 'none';
 
-    // Append User Bubble with attached file badges
+    // Append to active conversation state
+    const activeConv = conversations.find(c => c.id === activeConvId);
+    if (activeConv) {
+      if (activeConv.messages.length === 0) {
+        activeConv.title = rawText.length > 28 ? rawText.substring(0, 26) + '...' : rawText;
+        renderConversationsList();
+      }
+      activeConv.messages.push({
+        role: 'user',
+        content: rawText,
+        attachedFiles: filesToUpload,
+        timestamp: Date.now()
+      });
+      saveConversations();
+    }
+
+    // Append user bubble to DOM
     if (overrideText === null) {
-      appendUserMessage(rawText, filesToUpload);
+      appendUserMessageDOM(rawText, filesToUpload);
       chatInput.value = '';
       chatInput.style.height = 'auto';
     }
 
-    // Add Thinking Placeholder
+    // Thinking placeholder
     const thinkingRow = appendThinkingPlaceholder();
-
-    // Trigger visual pulse
     neuralVis.triggerPulse();
 
-    const currentApiKey = localStorage.getItem('cognipulse_api_key') || null;
-    const currentProvider = localStorage.getItem('cognipulse_ai_provider') || 'auto';
+    const savedApiKey = localStorage.getItem('cognipulse_api_key') || null;
+    const savedProvider = localStorage.getItem('cognipulse_ai_provider') || 'auto';
 
     try {
       const resp = await fetch('/api/chat', {
@@ -381,13 +479,14 @@ document.addEventListener('DOMContentLoaded', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query: fullQueryPayload,
-          apiKey: currentApiKey,
-          provider: currentProvider
+          apiKey: savedApiKey,
+          provider: savedProvider,
+          model: currentModel,
+          webSearch: isWebSearchEnabled
         })
       });
       const data = await resp.json();
 
-      // Remove thinking placeholder
       thinkingRow.remove();
 
       if (!resp.ok || data.error) {
@@ -395,8 +494,22 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      // Render AI Message with Collapsible Thought Stream
-      appendAiMessage(data.response || 'Knowledge assimilated.', rawText, data);
+      const responseText = data.response || 'Knowledge assimilated.';
+
+      if (activeConv) {
+        activeConv.messages.push({
+          role: 'assistant',
+          content: responseText,
+          fullData: data,
+          timestamp: Date.now()
+        });
+        saveConversations();
+      }
+
+      appendAiMessageDOM(responseText, data);
+
+      // Check if response contains runnable web artifact
+      detectAndRenderArtifact(responseText);
 
       if (data.firing_event && data.firing_event.activated_memories) {
         neuralVis.triggerPulse(data.firing_event.activated_memories);
@@ -409,8 +522,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-
-  function appendUserMessage(content, attachedFiles = []) {
+  function appendUserMessageDOM(content, attachedFiles = [], shouldScroll = true) {
     const row = document.createElement('div');
     row.className = 'chat-row-user';
 
@@ -429,13 +541,13 @@ document.addEventListener('DOMContentLoaded', () => {
         ${escapeHtml(content).replace(/\n/g, '<br/>')}
       </div>
       <div class="user-actions-bar">
-        <button class="btn-user-action btn-edit-msg" title="Edit Question">
+        <button class="btn-user-action btn-edit-msg" title="Edit Prompt">
           <i data-lucide="edit-3"></i> Edit
         </button>
-        <button class="btn-user-action btn-retry-msg" title="Ask Again / Re-question">
-          <i data-lucide="rotate-cw"></i> Ask Again
+        <button class="btn-user-action btn-retry-msg" title="Retry Prompt">
+          <i data-lucide="rotate-cw"></i> Retry
         </button>
-        <button class="btn-user-action btn-copy-user-msg" title="Copy Question">
+        <button class="btn-user-action btn-copy-user-msg" title="Copy Prompt">
           <i data-lucide="copy"></i> Copy
         </button>
       </div>
@@ -443,10 +555,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     messagesList.appendChild(row);
     if (window.lucide) lucide.createIcons();
-    scrollToBottom();
+    if (shouldScroll) scrollToBottom();
 
-
-    // 1. Copy User Message
+    // Copy Action
     const btnCopy = row.querySelector('.btn-copy-user-msg');
     if (btnCopy) {
       btnCopy.addEventListener('click', () => {
@@ -460,15 +571,13 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // 2. Retry / Re-question
+    // Retry Action
     const btnRetry = row.querySelector('.btn-retry-msg');
     if (btnRetry) {
-      btnRetry.addEventListener('click', () => {
-        handleSendMessage(content);
-      });
+      btnRetry.addEventListener('click', () => handleSendMessage(content));
     }
 
-    // 3. Inline Edit
+    // Inline Edit Action
     const btnEdit = row.querySelector('.btn-edit-msg');
     const userBubble = row.querySelector('.user-bubble');
     const actionsBar = row.querySelector('.user-actions-bar');
@@ -491,7 +600,6 @@ document.addEventListener('DOMContentLoaded', () => {
         row.prepend(editBox);
         const editArea = editBox.querySelector('textarea');
         editArea.focus();
-        editArea.setSelectionRange(editArea.value.length, editArea.value.length);
 
         const btnCancel = editBox.querySelector('.btn-inline-cancel');
         const btnSave = editBox.querySelector('.btn-inline-save');
@@ -505,32 +613,26 @@ document.addEventListener('DOMContentLoaded', () => {
         btnSave.addEventListener('click', () => {
           const newContent = editArea.value.trim();
           if (!newContent) return;
-
-          content = newContent;
-          userBubble.innerHTML = escapeHtml(newContent).replace(/\n/g, '<br/>');
           editBox.remove();
           userBubble.style.display = 'block';
           actionsBar.style.display = 'flex';
-
-          // Resubmit edited question to CogniPulse
           handleSendMessage(newContent);
         });
       });
     }
   }
 
-
   function appendThinkingPlaceholder() {
     const row = document.createElement('div');
     row.className = 'chat-row-ai';
     row.innerHTML = `
-      <div class="ai-avatar"><i data-lucide="brain-circuit"></i></div>
+      <div class="ai-avatar"><img src="logo.svg" alt="CogniPulse" style="width:100%;height:100%;object-fit:contain;"></div>
       <div class="ai-body">
         <div class="thought-accordion">
           <div class="thought-summary-btn" style="cursor:default;">
             <div class="thought-title-wrap">
               <i data-lucide="loader-2" class="spin"></i>
-              <span>Thinking & recalling synapses...</span>
+              <span>CogniPulse is thinking & synthesizing...</span>
             </div>
           </div>
         </div>
@@ -542,11 +644,11 @@ document.addEventListener('DOMContentLoaded', () => {
     return row;
   }
 
-  function appendAiMessage(responseContent, userQuery, fullData) {
+  function appendAiMessageDOM(responseContent, fullData = {}, shouldScroll = true) {
     const row = document.createElement('div');
     row.className = 'chat-row-ai';
 
-    const latency = fullData && fullData.latency_ms ? fullData.latency_ms : '12';
+    const latency = fullData && fullData.latency_ms ? fullData.latency_ms : '14';
     const thoughtSteps = fullData && fullData.thought_stream ? fullData.thought_stream : [];
 
     let thoughtStepsHtml = '';
@@ -561,11 +663,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const formattedText = formatMarkdown(responseContent);
 
     row.innerHTML = `
-      <div class="ai-avatar"><img src="logo.svg" alt="CogniPulse" style="width:100%; height:100%; object-fit:contain;"></div>
+      <div class="ai-avatar"><img src="logo.svg" alt="CogniPulse" style="width:100%;height:100%;object-fit:contain;"></div>
       <div class="ai-body">
-
         
-        <!-- Thought Process Accordion -->
+        <!-- Claude Thinking Accordion -->
         <div class="thought-accordion">
           <button class="thought-summary-btn">
             <div class="thought-title-wrap">
@@ -575,23 +676,23 @@ document.addEventListener('DOMContentLoaded', () => {
             <i data-lucide="chevron-down" class="acc-chevron"></i>
           </button>
           <div class="thought-content-box">
-            ${thoughtStepsHtml || '<div class="text-sm text-muted">Associative recall and Hebbian resonance completed.</div>'}
+            ${thoughtStepsHtml || '<div class="text-sm text-muted">Associative recall and reasoning completed.</div>'}
           </div>
         </div>
 
-        <!-- AI Text Body -->
+        <!-- AI Markdown Content -->
         <div class="ai-text">${formattedText}</div>
 
-        <!-- Action Toolbar -->
+        <!-- AI Actions Toolbar -->
         <div class="ai-actions-bar">
-          <button class="btn-ai-action btn-reinforce" title="Good response (+0.3 synaptic boost)">
+          <button class="btn-ai-action btn-copy-ai" title="Copy Response">
+            <i data-lucide="copy"></i> Copy
+          </button>
+          <button class="btn-ai-action btn-good" title="Good Response">
             <i data-lucide="thumbs-up"></i>
           </button>
-          <button class="btn-ai-action btn-correct-trigger" title="Teach correction & synthesize heuristic rule">
-            <i data-lucide="wrench"></i> Teach Correction
-          </button>
-          <button class="btn-ai-action btn-copy-msg" title="Copy response">
-            <i data-lucide="copy"></i>
+          <button class="btn-ai-action btn-bad" title="Needs Correction">
+            <i data-lucide="thumbs-down"></i>
           </button>
         </div>
       </div>
@@ -599,66 +700,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
     messagesList.appendChild(row);
     if (window.lucide) lucide.createIcons();
-    scrollToBottom();
+    if (shouldScroll) scrollToBottom();
 
-    // Accordion toggle
-    const accordionBtn = row.querySelector('.thought-summary-btn');
-    const accordionContent = row.querySelector('.thought-content-box');
-    if (accordionBtn && accordionContent) {
-      accordionBtn.addEventListener('click', () => {
-        accordionContent.classList.toggle('open');
+    // Accordion Toggle
+    const thoughtBtn = row.querySelector('.thought-summary-btn');
+    const thoughtBox = row.querySelector('.thought-content-box');
+    if (thoughtBtn && thoughtBox) {
+      thoughtBtn.addEventListener('click', () => {
+        thoughtBox.classList.toggle('open');
       });
     }
 
-    // Reinforce button
-    const btnReinforce = row.querySelector('.btn-reinforce');
-    if (btnReinforce) {
-      btnReinforce.addEventListener('click', async () => {
-        btnReinforce.innerHTML = `<i data-lucide="check"></i>`;
-        btnReinforce.style.color = '#10b981';
-        if (window.lucide) lucide.createIcons();
-        await fetch('/api/feedback', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ query: userQuery, response: responseContent, is_positive: true })
-        });
-        neuralVis.triggerPulse();
-        fetchTelemetry();
-      });
-    }
-
-    // Correction button
-    const btnCorrect = row.querySelector('.btn-correct-trigger');
-    if (btnCorrect) {
-      btnCorrect.addEventListener('click', () => {
-        activeCorrectionContext = { query: userQuery, response: responseContent };
-        modalCorrectionText.value = '';
-        correctModal.classList.add('active');
-      });
-    }
-
-    // Copy button
-    const btnCopy = row.querySelector('.btn-copy-msg');
+    // Copy Response
+    const btnCopy = row.querySelector('.btn-copy-ai');
     if (btnCopy) {
       btnCopy.addEventListener('click', () => {
         navigator.clipboard.writeText(responseContent);
-        btnCopy.innerHTML = `<i data-lucide="check"></i>`;
+        btnCopy.innerHTML = `<i data-lucide="check"></i> Copied`;
         if (window.lucide) lucide.createIcons();
         setTimeout(() => {
-          btnCopy.innerHTML = `<i data-lucide="copy"></i>`;
+          btnCopy.innerHTML = `<i data-lucide="copy"></i> Copy`;
           if (window.lucide) lucide.createIcons();
         }, 1500);
       });
     }
+
+    // Feedback
+    const btnGood = row.querySelector('.btn-good');
+    const btnBad = row.querySelector('.btn-bad');
+    if (btnGood) {
+      btnGood.addEventListener('click', () => {
+        btnGood.style.color = 'var(--primary-emerald)';
+        fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: 'Response feedback', response: responseContent, is_positive: true })
+        });
+      });
+    }
+    if (btnBad) {
+      btnBad.addEventListener('click', () => {
+        btnBad.style.color = 'var(--primary-rose)';
+        fetch('/api/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: 'Response feedback', response: responseContent, is_positive: false })
+        });
+      });
+    }
   }
 
-  function appendSystemError(msg) {
+  function appendSystemError(errMsg) {
     const row = document.createElement('div');
     row.className = 'chat-row-ai';
     row.innerHTML = `
-      <div class="ai-avatar" style="color:#f43f5e; border-color:#f43f5e;"><i data-lucide="alert-circle"></i></div>
+      <div class="ai-avatar"><img src="logo.svg" alt="CogniPulse" style="width:100%;height:100%;object-fit:contain;"></div>
       <div class="ai-body">
-        <div class="ai-text" style="color:#f43f5e;">${escapeHtml(msg)}</div>
+        <div class="ai-text" style="color: var(--primary-rose);">${escapeHtml(errMsg)}</div>
       </div>
     `;
     messagesList.appendChild(row);
@@ -666,10 +764,92 @@ document.addEventListener('DOMContentLoaded', () => {
     scrollToBottom();
   }
 
-  function scrollToBottom() {
-    chatMessagesScroll.scrollTop = chatMessagesScroll.scrollHeight;
+  // ==========================================
+  // 7. Claude Interactive Artifacts / Canvas Engine
+  // ==========================================
+  function detectAndRenderArtifact(responseText) {
+    // Check for HTML/JS/SVG code blocks
+    const htmlBlockMatch = responseText.match(/```(?:html|svg|xml)\n([\s\S]*?)```/i);
+    if (htmlBlockMatch) {
+      const code = htmlBlockMatch[1];
+      openArtifact({
+        title: "Interactive Web Artifact",
+        type: "HTML / Web App",
+        code: code
+      });
+    }
   }
 
+  function openArtifact(artData) {
+    activeArtifact = artData;
+    artifactTitle.textContent = artData.title;
+    artifactTypeBadge.textContent = artData.type;
+    artifactCodeContent.textContent = artData.code;
+
+    // Load iframe live preview
+    const doc = artifactIframe.contentDocument || artifactIframe.contentWindow.document;
+    doc.open();
+    doc.write(artData.code);
+    doc.close();
+
+    artifactsCanvasDrawer.style.display = 'flex';
+    setCanvasTab('preview');
+  }
+
+  function closeArtifactsCanvas() {
+    artifactsCanvasDrawer.style.display = 'none';
+    artifactsCanvasDrawer.classList.remove('fullscreen');
+  }
+
+  function setCanvasTab(tab) {
+    if (tab === 'preview') {
+      btnTabPreview.classList.add('active');
+      btnTabCode.classList.remove('active');
+      canvasPreviewPane.style.display = 'block';
+      canvasCodePane.style.display = 'none';
+    } else {
+      btnTabCode.classList.add('active');
+      btnTabPreview.classList.remove('active');
+      canvasCodePane.style.display = 'block';
+      canvasPreviewPane.style.display = 'none';
+    }
+  }
+
+  btnTabPreview.addEventListener('click', () => setCanvasTab('preview'));
+  btnTabCode.addEventListener('click', () => setCanvasTab('code'));
+  btnCloseArtifactsCanvas.addEventListener('click', closeArtifactsCanvas);
+
+  btnCopyArtifactCode.addEventListener('click', () => {
+    if (activeArtifact && activeArtifact.code) {
+      navigator.clipboard.writeText(activeArtifact.code);
+      btnCopyArtifactCode.innerHTML = `<i data-lucide="check"></i>`;
+      if (window.lucide) lucide.createIcons();
+      setTimeout(() => {
+        btnCopyArtifactCode.innerHTML = `<i data-lucide="copy"></i>`;
+        if (window.lucide) lucide.createIcons();
+      }, 1500);
+    }
+  });
+
+  btnDownloadArtifact.addEventListener('click', () => {
+    if (activeArtifact && activeArtifact.code) {
+      const blob = new Blob([activeArtifact.code], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${activeArtifact.title.toLowerCase().replace(/\s+/g, '_')}.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  });
+
+  btnFullscreenArtifact.addEventListener('click', () => {
+    artifactsCanvasDrawer.classList.toggle('fullscreen');
+  });
+
+  // ==========================================
+  // 8. Markdown Parser & Typography Engine
+  // ==========================================
   function escapeHtml(str) {
     return (str || '').toString().replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   }
@@ -700,21 +880,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 6. Bullet lists (• item or - item or * item)
     t = t.replace(/^[•\-\*]\s+(.*?)$/gm, '<li class="md-li">$1</li>');
-    t = t.replace(/(<li class="md-li">[\s\S]*?<\/li>)/g, (match) => {
-      return `<ul class="md-ul">${match}</ul>`;
-    });
-    // Merge adjacent <ul> tags
+    t = t.replace(/(<li class="md-li">[\s\S]*?<\/li>)/g, (match) => `<ul class="md-ul">${match}</ul>`);
     t = t.replace(/<\/ul>\s*<ul class="md-ul">/g, '');
 
     // 7. Numbered lists (1. item, 2. item)
     t = t.replace(/^\d+\.\s+(.*?)$/gm, '<li class="md-oli">$1</li>');
-    t = t.replace(/(<li class="md-oli">[\s\S]*?<\/li>)/g, (match) => {
-      return `<ol class="md-ol">${match}</ol>`;
-    });
-    // Merge adjacent <ol> tags
+    t = t.replace(/(<li class="md-oli">[\s\S]*?<\/li>)/g, (match) => `<ol class="md-ol">${match}</ol>`);
     t = t.replace(/<\/ol>\s*<ol class="md-ol">/g, '');
 
-    // 8. Paragraphs and spacing (Replace double newlines with paragraphs)
+    // 8. Paragraphs and clean spacing
     const blocks = t.split(/\n{2,}/);
     t = blocks.map(b => {
       b = b.trim();
@@ -728,16 +902,50 @@ document.addEventListener('DOMContentLoaded', () => {
     return t;
   }
 
+  function scrollToBottom() {
+    chatMessagesScroll.scrollTop = chatMessagesScroll.scrollHeight;
+  }
 
   // ==========================================
-  // 3. Modals: Teach & Ingestion & Correction
+  // 9. Modals (AI Settings & Teach Fact)
   // ==========================================
+  function openAiSettings() {
+    aiSettingsModal.classList.add('active');
+    if (aiProviderSelect) aiProviderSelect.value = localStorage.getItem('cognipulse_ai_provider') || 'auto';
+    if (inputCustomApiKey) inputCustomApiKey.value = localStorage.getItem('cognipulse_api_key') || '';
+  }
+
+  if (btnHeaderAiSettings) btnHeaderAiSettings.addEventListener('click', openAiSettings);
+  if (btnSidebarAiSettings) btnSidebarAiSettings.addEventListener('click', openAiSettings);
+  if (btnCloseAiSettingsModal) btnCloseAiSettingsModal.addEventListener('click', () => aiSettingsModal.classList.remove('active'));
+
+  if (btnSaveAiSettings) {
+    btnSaveAiSettings.addEventListener('click', () => {
+      const p = aiProviderSelect.value;
+      const k = inputCustomApiKey.value.trim();
+      localStorage.setItem('cognipulse_ai_provider', p);
+      if (k) localStorage.setItem('cognipulse_api_key', k);
+      else localStorage.removeItem('cognipulse_api_key');
+      aiSettingsModal.classList.remove('active');
+      alert('AI Engine settings saved!');
+    });
+  }
+
+  if (btnClearApiKey) {
+    btnClearApiKey.addEventListener('click', () => {
+      localStorage.removeItem('cognipulse_api_key');
+      inputCustomApiKey.value = '';
+      alert('API Key cleared.');
+    });
+  }
+
   function openTeachModal() {
     modalFactText.value = '';
     teachModal.classList.add('active');
   }
+
   if (btnHeaderTeach) btnHeaderTeach.addEventListener('click', openTeachModal);
-  if (btnQuickTeach) btnQuickTeach.addEventListener('click', openTeachModal);
+  if (btnSidebarTeach) btnSidebarTeach.addEventListener('click', openTeachModal);
   if (btnCloseTeachModal) btnCloseTeachModal.addEventListener('click', () => teachModal.classList.remove('active'));
   if (btnCancelTeach) btnCancelTeach.addEventListener('click', () => teachModal.classList.remove('active'));
 
@@ -755,8 +963,7 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({ fact, category: cat })
         });
         teachModal.classList.remove('active');
-        heroWelcome.style.display = 'none';
-        appendAiMessage(`🧠 **Knowledge Assimilated:** I have integrated this new fact into my neural core:\n\n> *"${fact}"*`, "Teach fact", {});
+        appendAiMessageDOM(`🧠 **Knowledge Assimilated:** I have integrated this new fact into my neural core:\n\n> *"${fact}"*`);
         neuralVis.triggerPulse();
         fetchTelemetry();
       } finally {
@@ -765,196 +972,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Ingest Modal
-  if (btnQuickIngest) {
-    btnQuickIngest.addEventListener('click', () => {
-      ingestTextInput.value = '';
-      ingestModal.classList.add('active');
-    });
-  }
-  if (btnCloseIngestModal) btnCloseIngestModal.addEventListener('click', () => ingestModal.classList.remove('active'));
-  if (btnCancelIngest) btnCancelIngest.addEventListener('click', () => ingestModal.classList.remove('active'));
-
-  if (btnSubmitIngest) {
-    btnSubmitIngest.addEventListener('click', async () => {
-      const text = ingestTextInput.value.trim();
-      if (!text) return;
-
-      btnSubmitIngest.textContent = 'Digesting...';
-      try {
-        const resp = await fetch('/api/ingest', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text })
-        });
-        const data = await resp.json();
-        ingestModal.classList.remove('active');
-        heroWelcome.style.display = 'none';
-        appendAiMessage(`📚 **Document Synthesized:** Discovered ${data.total_nodes || 0} concept entities and linked relational triples into the knowledge graph.`, "Digest Document", {});
-        neuralVis.triggerPulse();
-        fetchTelemetry();
-      } finally {
-        btnSubmitIngest.textContent = 'Digest & Learn';
-      }
-    });
-  }
-
-  // Correction Modal
-  if (btnCloseCorrectModal) btnCloseCorrectModal.addEventListener('click', () => correctModal.classList.remove('active'));
-  if (btnCancelCorrect) btnCancelCorrect.addEventListener('click', () => correctModal.classList.remove('active'));
-
-  if (btnSubmitCorrection) {
-    btnSubmitCorrection.addEventListener('click', async () => {
-      const corr = modalCorrectionText.value.trim();
-      if (!corr || !activeCorrectionContext) return;
-
-      try {
-        await fetch('/api/feedback', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: activeCorrectionContext.query,
-            response: activeCorrectionContext.response,
-            is_positive: false,
-            correction: corr
-          })
-        });
-        correctModal.classList.remove('active');
-        appendAiMessage(`🔧 **Adaptive Rule Synthesized:** I registered your ground truth and evolved my reasoning rules:\n\n> *"${corr}"*`, "Apply correction", {});
-        neuralVis.triggerPulse();
-        fetchTelemetry();
-      } catch (e) {
-        alert('Error applying correction: ' + e.message);
-      }
-    });
-  }
-
   // ==========================================
-  // 4. Simulation Controls
-  // ==========================================
-  if (btnSimStep) {
-    btnSimStep.addEventListener('click', async () => {
-      const resp = await fetch('/api/sim', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'step' })
-      });
-      const data = await resp.json();
-      updateSimTelemetry(data);
-      fetchSimState();
-    });
-  }
-
-  if (btnSimAutoPlay) {
-    btnSimAutoPlay.addEventListener('click', () => {
-      isSimAutoRunning = !isSimAutoRunning;
-      if (isSimAutoRunning) {
-        btnSimAutoPlay.innerHTML = `<i data-lucide="pause"></i> Pause`;
-        simAutoInterval = setInterval(async () => {
-          const resp = await fetch('/api/sim', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'step' })
-          });
-          const data = await resp.json();
-          updateSimTelemetry(data);
-          fetchSimState();
-        }, 150);
-      } else {
-        btnSimAutoPlay.innerHTML = `<i data-lucide="fast-forward"></i> Auto Learn`;
-        clearInterval(simAutoInterval);
-      }
-      if (window.lucide) lucide.createIcons();
-    });
-  }
-
-  if (btnSimTrainBatch) {
-    btnSimTrainBatch.addEventListener('click', async () => {
-      btnSimTrainBatch.textContent = 'Training...';
-      try {
-        await fetch('/api/sim', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'train', episodes: 25 })
-        });
-        fetchSimState();
-      } finally {
-        btnSimTrainBatch.innerHTML = `<i data-lucide="zap"></i> Train Batch (25 Ep)`;
-        if (window.lucide) lucide.createIcons();
-      }
-    });
-  }
-
-  if (btnSimReset) {
-    btnSimReset.addEventListener('click', async () => {
-      await fetch('/api/sim', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'reset' })
-      });
-      fetchSimState();
-    });
-  }
-
-  function updateSimTelemetry(data) {
-    if (!data) return;
-    const epVal = document.getElementById('simEpisodeVal');
-    const stVal = document.getElementById('simStepsVal');
-    const lossVal = document.getElementById('simLossVal');
-    if (epVal) epVal.textContent = data.episode || 0;
-    if (stVal) stVal.textContent = data.total_steps || 0;
-    if (lossVal) lossVal.textContent = (data.td_loss !== undefined ? data.td_loss : 0.0).toFixed(3);
-  }
-
-  async function fetchSimState() {
-    try {
-      const resp = await fetch('/api/sim');
-      const state = await resp.json();
-      simViewer.updateState(state);
-    } catch (e) {}
-  }
-
-  // ==========================================
-  // 5. Telemetry & Memory Sync
+  // 10. Background Telemetry & Initialization
   // ==========================================
   async function fetchTelemetry() {
     try {
       const resp = await fetch('/api/telemetry');
       const data = await resp.json();
-
-      // Update sidebar telemetry
-      const sideMem = document.getElementById('sideMemCount');
-      const sideAcc = document.getElementById('sideAccuracy');
-      const sidePlast = document.getElementById('sidePlasticity');
-      if (sideMem) sideMem.textContent = data.memory.total_memories || '0';
-      if (sideAcc) sideAcc.textContent = `${data.learning.accuracy_percentage || 96}%`;
-      if (sidePlast) sidePlast.textContent = data.learning.synaptic_plasticity_index || '0.85';
-
-      // Update Visualizers
       if (data.graph) kgViewer.updateGraph(data.graph);
-      
-      const memResp = await fetch('/api/memories');
-      const memData = await memResp.json();
-      if (memData.memories) {
-        neuralVis.updateFromBrainData(memData.memories);
-
-        // Populate sidebar memory chips
-        const memList = document.getElementById('sidebarMemoryList');
-        if (memList && memData.memories.length > 0) {
-          memList.innerHTML = memData.memories.slice(0, 8).map(m => `
-            <div class="memory-chip-item" title="${escapeHtml(m.content)}">
-              <i data-lucide="sparkles" class="chip-ico"></i>
-              <span class="chip-txt">${escapeHtml(m.content.length > 30 ? m.content.substring(0, 28) + '...' : m.content)}</span>
-            </div>
-          `).join('');
-          if (window.lucide) lucide.createIcons();
-        }
-      }
     } catch (e) {}
   }
 
-  // Initialize
+  // Initialize conversations
+  if (conversations.length === 0) {
+    createNewConversation();
+  } else {
+    renderConversationsList();
+    loadActiveConversation();
+  }
+
   fetchTelemetry();
-  fetchSimState();
-  setInterval(fetchTelemetry, 4000);
+  setInterval(fetchTelemetry, 6000);
 });

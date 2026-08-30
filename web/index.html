@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CogniPulse - Self-Learning AI</title>
-  <!-- Google Fonts: Outfit & Inter & JetBrains Mono -->
+  <title>CogniPulse - Autonomous Neural AI</title>
+  <!-- Google Fonts: Plus Jakarta Sans & JetBrains Mono -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <!-- Favicon -->
   <link rel="icon" type="image/svg+xml" href="logo.svg">
-  <!-- PDF.js for Client-Side PDF Parsing -->
+  <!-- PDF.js for Client-Side Document Parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
     if (window['pdfjs-dist/build/pdf']) {
@@ -20,15 +20,14 @@
   </script>
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <link rel="stylesheet" href="style.css?v=1.4">
+  <link rel="stylesheet" href="style.css?v=2.0">
 </head>
 
+<body class="claude-theme">
 
-<body class="ai-theme">
-
-  <div class="app-layout">
+  <div class="app-layout" id="appLayout">
     
-    <!-- LEFT SIDEBAR (Claude/ChatGPT/Gemini style) -->
+    <!-- LEFT SIDEBAR (Claude AI style with Chat History & Projects) -->
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-header">
         <div class="brand">
@@ -37,23 +36,332 @@
           </div>
           <div class="brand-details">
             <span class="brand-name">Cogni<span class="gradient-text">Pulse</span></span>
-            <span class="brand-tag">Self-Learning AI</span>
+            <span class="brand-tag">Neural Claude 3.7</span>
           </div>
         </div>
-        <button class="btn-sidebar-toggle" id="btnToggleSidebar" title="Toggle Sidebar">
+        <button class="btn-sidebar-toggle" id="btnToggleSidebar" title="Collapse Sidebar">
           <i data-lucide="panel-left-close"></i>
         </button>
       </div>
 
-      <!-- New Chat Button -->
-      <div class="new-chat-wrapper">
-        <button class="btn-new-chat" id="btnNewChat">
+      <!-- New Chat & Search -->
+      <div class="sidebar-actions-wrap">
+        <button class="btn-new-chat-main" id="btnNewChat">
           <i data-lucide="plus"></i>
           <span>New Chat</span>
+          <kbd class="kbd-badge">Ctrl+K</kbd>
         </button>
+        
+        <div class="sidebar-search-box">
+          <i data-lucide="search" class="search-ico"></i>
+          <input type="text" id="inputSearchChats" placeholder="Search conversations...">
+        </div>
       </div>
 
-      <!-- AI Engine & Model Settings Modal -->
+      <!-- Conversations History List (Claude style) -->
+      <div class="sidebar-scroll">
+        <div class="sidebar-section-title">Recent Conversations</div>
+        <div class="conversations-list" id="conversationsList">
+          <!-- Dynamic conversation items inserted here -->
+        </div>
+
+        <div class="sidebar-section-title" style="margin-top: 18px;">Cognitive Systems</div>
+        <nav class="nav-menu">
+          <button class="nav-item active" data-view="chat-view">
+            <i data-lucide="message-square"></i>
+            <span>Chat & Artifacts</span>
+          </button>
+          <button class="nav-item" data-view="neural-view">
+            <i data-lucide="activity"></i>
+            <span>Neural Synapse 3D</span>
+          </button>
+          <button class="nav-item" data-view="graph-view">
+            <i data-lucide="share-2"></i>
+            <span>Knowledge Graph</span>
+          </button>
+          <button class="nav-item" data-view="sim-view">
+            <i data-lucide="cpu"></i>
+            <span>RL Q-Learning Lab</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <button class="btn-sidebar-footer-action" id="btnSidebarAiSettings">
+          <i data-lucide="settings"></i>
+          <span>Model Settings</span>
+        </button>
+        <button class="btn-sidebar-footer-action" id="btnSidebarTeach">
+          <i data-lucide="sparkles"></i>
+          <span>Teach Ground Truth</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CHAT & ARTIFACTS CONTAINER -->
+    <main class="main-content">
+      
+      <!-- Top Claude Navigation Bar -->
+      <header class="top-nav">
+        <div class="header-left">
+          <button class="btn-icon-mobile" id="btnOpenSidebarMobile">
+            <i data-lucide="menu"></i>
+          </button>
+          
+          <!-- Claude Model Selector Dropdown -->
+          <div class="model-selector-container">
+            <button class="model-selector-btn" id="btnModelDropdown">
+              <span class="model-badge-icon"><i data-lucide="sparkles"></i></span>
+              <span class="model-name-text" id="selectedModelLabel">CogniPulse 3.7 Sonnet</span>
+              <i data-lucide="chevron-down" class="chevron-ico"></i>
+            </button>
+            <div class="model-dropdown-menu" id="modelDropdownMenu" style="display:none;">
+              <div class="model-option active" data-model="sonnet-3.7" data-label="CogniPulse 3.7 Sonnet">
+                <div class="model-opt-header">
+                  <strong>CogniPulse 3.7 Sonnet</strong>
+                  <span class="badge-tag">Hybrid Reasoning</span>
+                </div>
+                <p>Most intelligent model for high-level reasoning, code, and live search.</p>
+              </div>
+              <div class="model-option" data-model="haiku-3.5" data-label="CogniPulse 3.5 Haiku">
+                <div class="model-opt-header">
+                  <strong>CogniPulse 3.5 Haiku</strong>
+                  <span class="badge-tag">Ultra Fast</span>
+                </div>
+                <p>Lightning-fast model for quick responses and everyday tasks.</p>
+              </div>
+              <div class="model-option" data-model="opus-3" data-label="CogniPulse Opus">
+                <div class="model-opt-header">
+                  <strong>CogniPulse Opus</strong>
+                  <span class="badge-tag">Deep Research</span>
+                </div>
+                <p>Deep analytical model for complex synthesis and large document analysis.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <div class="status-indicator">
+            <span class="status-dot"></span>
+            <span class="status-text">Online</span>
+          </div>
+          <button class="btn-pill-action" id="btnHeaderAiSettings" title="Configure AI Provider & Keys">
+            <i data-lucide="sliders-horizontal"></i>
+            <span>Engine</span>
+          </button>
+          <button class="btn-pill-action" id="btnHeaderTeach">
+            <i data-lucide="sparkles"></i>
+            <span>Teach Fact</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- VIEW 1: Chat Stream & Split Canvas Area -->
+      <div id="chat-view" class="view-panel active">
+        
+        <div class="chat-and-canvas-wrapper" id="chatCanvasWrapper">
+          
+          <!-- Chat Column -->
+          <div class="chat-column" id="chatColumn">
+            
+            <div class="chat-messages-scroll" id="chatMessagesScroll">
+              
+              <!-- Hero Banner (Shows when chat is empty) -->
+              <div class="hero-container" id="heroWelcome">
+                <div class="hero-logo">
+                  <img src="logo.svg" alt="CogniPulse Logo" class="hero-logo-img">
+                </div>
+                <h1 class="hero-heading">How can I help you today?</h1>
+                <p class="hero-subtext">Ask questions, generate interactive apps, analyze documents, or brainstorm ideas.</p>
+
+                <div class="suggestion-grid">
+                  <div class="suggestion-card" data-prompt="Create an interactive HTML5 particle physics visualizer with slider controls.">
+                    <i data-lucide="code-2" class="sug-icon text-cyan"></i>
+                    <div class="sug-text">
+                      <strong>Interactive Web App Artifact</strong>
+                      <span>Generate and live preview runnable web code</span>
+                    </div>
+                  </div>
+                  <div class="suggestion-card" data-prompt="Explain Quantum Computing principles and quantum entanglement simply.">
+                    <i data-lucide="sparkles" class="sug-icon text-purple"></i>
+                    <div class="sug-text">
+                      <strong>Explain Complex Concepts</strong>
+                      <span>Break down scientific theories in plain language</span>
+                    </div>
+                  </div>
+                  <div class="suggestion-card" data-prompt="computer science k bary main btao. Shobay aur career opportunities samjhao.">
+                    <i data-lucide="globe" class="sug-icon text-emerald"></i>
+                    <div class="sug-text">
+                      <strong>Roman Urdu & Multilingual</strong>
+                      <span>Ask in Roman Urdu, English, or any global language</span>
+                    </div>
+                  </div>
+                  <div class="suggestion-card" data-prompt="Help me brainstorm 5 unique AI startup business models for 2026.">
+                    <i data-lucide="lightbulb" class="sug-icon text-amber"></i>
+                    <div class="sug-text">
+                      <strong>Brainstorm & Strategize</strong>
+                      <span>Generate creative concepts and roadmaps</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Messages Stream -->
+              <div class="messages-list" id="messagesList"></div>
+            </div>
+
+            <!-- Floating Bottom Input Bar (Claude Floating Capsule) -->
+            <div class="chat-input-container">
+              <!-- Attached Files Preview Box -->
+              <div class="attached-files-container" id="attachedFilesContainer" style="display:none;"></div>
+
+              <div class="input-card">
+                <!-- Hidden File Input -->
+                <input type="file" id="fileInput" accept=".txt,.md,.json,.csv,.py,.js,.html,.css,.xml,.pdf,.log" multiple style="display:none;">
+                
+                <button class="btn-attach" id="btnUploadFile" title="Attach Document / Code File (.txt, .pdf, .py, .json, .csv)">
+                  <i data-lucide="paperclip"></i>
+                </button>
+                <button class="btn-attach active" id="btnToggleWebSearch" title="Toggle Live Web Search (DuckDuckGo + Wikipedia)">
+                  <i data-lucide="globe"></i>
+                </button>
+                
+                <textarea id="chatInput" placeholder="Message CogniPulse, ask anything, paste code..." rows="1"></textarea>
+                
+                <div class="input-right-controls">
+                  <span class="active-model-pill" id="inputModelPill">Sonnet 3.7</span>
+                  <button class="btn-send-main" id="btnSendChat" title="Send Message (Enter)">
+                    <i data-lucide="arrow-up"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="input-disclaimer">
+                CogniPulse can make mistakes. Verify important facts with live web grounding.
+              </div>
+            </div>
+
+          </div>
+
+          <!-- RIGHT COLUMN: Claude Artifacts / Interactive Canvas Drawer -->
+          <div class="artifacts-canvas-drawer" id="artifactsCanvasDrawer" style="display:none;">
+            <div class="canvas-header">
+              <div class="canvas-title-wrap">
+                <i data-lucide="layout" class="canvas-icon"></i>
+                <div class="canvas-meta">
+                  <span class="canvas-title-text" id="artifactTitle">Interactive Artifact</span>
+                  <span class="canvas-type-badge" id="artifactTypeBadge">HTML App</span>
+                </div>
+              </div>
+              
+              <div class="canvas-actions">
+                <div class="canvas-tabs">
+                  <button class="canvas-tab-btn active" id="btnTabPreview"><i data-lucide="eye"></i> Preview</button>
+                  <button class="canvas-tab-btn" id="btnTabCode"><i data-lucide="code"></i> Code</button>
+                </div>
+                <button class="btn-canvas-action" id="btnCopyArtifactCode" title="Copy Code">
+                  <i data-lucide="copy"></i>
+                </button>
+                <button class="btn-canvas-action" id="btnDownloadArtifact" title="Download Artifact">
+                  <i data-lucide="download"></i>
+                </button>
+                <button class="btn-canvas-action" id="btnFullscreenArtifact" title="Fullscreen">
+                  <i data-lucide="maximize-2"></i>
+                </button>
+                <button class="btn-canvas-action btn-close-canvas" id="btnCloseArtifactsCanvas" title="Close Canvas">
+                  <i data-lucide="x"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="canvas-body">
+              <!-- Tab 1: Live Sandboxed Iframe Preview -->
+              <div class="canvas-preview-pane active" id="canvasPreviewPane">
+                <iframe id="artifactIframe" sandbox="allow-scripts allow-modals allow-same-origin"></iframe>
+              </div>
+
+              <!-- Tab 2: Code Viewer -->
+              <div class="canvas-code-pane" id="canvasCodePane" style="display:none;">
+                <pre><code id="artifactCodeContent" class="language-html"></code></pre>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- VIEW 2: 3D Neural Synapse Studio -->
+      <div id="neural-view" class="view-panel">
+        <div class="panel-header-bar">
+          <div class="panel-title-wrap">
+            <i data-lucide="activity" class="text-cyan"></i>
+            <h2>3D Neural Synapse Studio</h2>
+          </div>
+          <button class="btn-close-view" data-close="neural-view"><i data-lucide="x"></i></button>
+        </div>
+        <div class="canvas-full-container">
+          <canvas id="neuralCanvas"></canvas>
+          <div class="canvas-floating-controls">
+            <button class="btn-ctrl-glass" id="btnPulseSynapse"><i data-lucide="zap"></i> Trigger Neural Pulse</button>
+            <button class="btn-ctrl-glass" id="btnDecaySynapse"><i data-lucide="hourglass"></i> Apply Hebbian Decay</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 3: Dynamic Knowledge Graph Explorer -->
+      <div id="graph-view" class="view-panel">
+        <div class="panel-header-bar">
+          <div class="panel-title-wrap">
+            <i data-lucide="share-2" class="text-purple"></i>
+            <h2>Dynamic Knowledge Graph Explorer</h2>
+          </div>
+          <button class="btn-close-view" data-close="graph-view"><i data-lucide="x"></i></button>
+        </div>
+        <div class="canvas-full-container">
+          <canvas id="graphCanvas"></canvas>
+          <div class="canvas-floating-controls">
+            <button class="btn-ctrl-glass" id="btnGraphFit"><i data-lucide="maximize"></i> Reset Viewport</button>
+            <button class="btn-ctrl-glass" id="btnRefreshGraph"><i data-lucide="refresh-cw"></i> Refresh Triples</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 4: Q-Learning Simulation Lab -->
+      <div id="sim-view" class="view-panel">
+        <div class="panel-header-bar">
+          <div class="panel-title-wrap">
+            <i data-lucide="cpu" class="text-emerald"></i>
+            <h2>Reinforcement Q-Learning Simulation Lab</h2>
+          </div>
+          <button class="btn-close-view" data-close="sim-view"><i data-lucide="x"></i></button>
+        </div>
+        <div class="sim-grid-layout">
+          <div class="sim-canvas-box">
+            <canvas id="simCanvas"></canvas>
+          </div>
+          <div class="sim-telemetry-box">
+            <h3>Q-Learning Telemetry</h3>
+            <div class="sim-stats-grid">
+              <div class="stat-card"><span class="stat-label">Episodes</span><span class="stat-val" id="simEpisodes">0</span></div>
+              <div class="stat-card"><span class="stat-label">Total Reward</span><span class="stat-val" id="simReward">0</span></div>
+              <div class="stat-card"><span class="stat-label">Epsilon (Exploration)</span><span class="stat-val" id="simEpsilon">1.00</span></div>
+              <div class="stat-card"><span class="stat-label">Success Rate</span><span class="stat-val" id="simSuccess">0%</span></div>
+            </div>
+            <div class="sim-controls-bar">
+              <button class="btn-primary" id="btnSimStep">Step Action</button>
+              <button class="btn-secondary" id="btnSimRun">Auto Train</button>
+              <button class="btn-ghost" id="btnSimReset">Reset Grid</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- AI Engine & Model Settings Modal -->
   <div class="modal-backdrop" id="aiSettingsModal" style="display:none;">
     <div class="modal-card">
       <div class="modal-header">
@@ -96,321 +404,43 @@
   </div>
 
   <!-- Teach Fact Modal -->
-
-      <!-- Nav Sections -->
-      <div class="sidebar-scroll">
-        <div class="sidebar-section-title">Cognitive Capabilities</div>
-        <div class="sidebar-nav-list">
-          <button class="nav-item active" data-view="chat-view">
-            <i data-lucide="message-square"></i>
-            <span>Chat & Dialogue</span>
-          </button>
-          <button class="nav-item" data-view="brain-view">
-            <i data-lucide="activity"></i>
-            <span>3D Neural Synapse</span>
-          </button>
-          <button class="nav-item" data-view="graph-view">
-            <i data-lucide="share-2"></i>
-            <span>Knowledge Graph</span>
-          </button>
-          <button class="nav-item" data-view="sim-view">
-            <i data-lucide="gamepad-2"></i>
-            <span>RL Simulation Lab</span>
-          </button>
-        </div>
-
-        <div class="sidebar-section-title">Assimilated Memory</div>
-        <div class="memory-chips-list" id="sidebarMemoryList">
-          <!-- Dynamically populated memory highlights -->
-          <div class="memory-chip-item">
-            <i data-lucide="sparkles" class="chip-ico"></i>
-            <span class="chip-txt">Continuous Hebbian Plasticity</span>
-          </div>
-          <div class="memory-chip-item">
-            <i data-lucide="sparkles" class="chip-ico"></i>
-            <span class="chip-txt">Dynamic Knowledge Graph</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Footer Stats (Brain Telemetry) -->
-      <div class="sidebar-footer">
-        <div class="brain-status-card">
-          <div class="status-indicator">
-            <span class="live-pulse"></span>
-            <span class="status-label">Continuous Learning Active</span>
-          </div>
-          <div class="stats-mini-row">
-            <div class="stat-mini">
-              <span class="stat-mini-val" id="sideMemCount">0</span>
-              <span class="stat-mini-lbl">Memories</span>
-            </div>
-            <div class="stat-mini">
-              <span class="stat-mini-val" id="sideAccuracy">96%</span>
-              <span class="stat-mini-lbl">Accuracy</span>
-            </div>
-            <div class="stat-mini">
-              <span class="stat-mini-val text-cyan" id="sidePlasticity">0.85</span>
-              <span class="stat-mini-lbl">Plasticity</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </aside>
-
-    <!-- MAIN CHAT & CONTENT AREA -->
-    <main class="main-content">
-      
-      <!-- Top Minimal Header -->
-      <header class="chat-header">
-        <div class="header-left">
-          <button class="btn-sidebar-open" id="btnOpenSidebarMobile">
-            <i data-lucide="menu"></i>
-          </button>
-          <div class="model-badge">
-            <span class="model-title">CogniPulse</span>
-            <span class="model-sub">Adaptive Core v1.0</span>
-            <i data-lucide="chevron-down" class="badge-chevron"></i>
-          </div>
-        </div>
-        
-        <div class="header-right">
-          <div class="status-indicator">
-            <span class="status-dot"></span>
-            <span class="status-text">Connected</span>
-          </div>
-          <button class="btn-ghost" id="btnOpenAiSettings" title="Configure AI Model & Live Search">
-            <i data-lucide="settings"></i> <span>AI Engine</span>
-          </button>
-          <button class="btn-primary-glow" id="btnHeaderTeach">
-            <i data-lucide="sparkles"></i> <span>Teach Fact</span>
-          </button>
-        </div>
-      </header>
-
-
-      <!-- VIEW 1: Modern Chat Container -->
-      <div id="chat-view" class="view-panel active">
-        <div class="chat-messages-scroll" id="chatMessagesScroll">
-          
-          <!-- Hero Banner (Standard Professional Claude/ChatGPT/Gemini style) -->
-          <div class="hero-container" id="heroWelcome">
-            <div class="hero-logo">
-              <img src="logo.svg" alt="CogniPulse Logo" class="hero-logo-img">
-            </div>
-            <h1 class="hero-heading">How can I help you today?</h1>
-
-            <p class="hero-subtext">Ask questions, write and debug code, analyze documents, or explore complex topics.</p>
-
-            <div class="suggestion-grid">
-              <div class="suggestion-card" data-prompt="Explain Quantum Computing in simple terms with real-world examples.">
-                <i data-lucide="sparkles" class="sug-icon text-cyan"></i>
-                <div class="sug-text">
-                  <strong>Explain a Complex Concept</strong>
-                  <span>Break down quantum computing in simple terms</span>
-                </div>
-              </div>
-              <div class="suggestion-card" data-prompt="Write a clean Python script to scrape top news headlines.">
-                <i data-lucide="code" class="sug-icon text-purple"></i>
-                <div class="sug-text">
-                  <strong>Write & Debug Code</strong>
-                  <span>Generate clean, modern code solutions</span>
-                </div>
-              </div>
-              <div class="suggestion-card" data-prompt="How many countries are in the world and what are their major continents?">
-                <i data-lucide="globe" class="sug-icon text-emerald"></i>
-                <div class="sug-text">
-                  <strong>World Knowledge & Facts</strong>
-                  <span>Explore geography, history, and science</span>
-                </div>
-              </div>
-              <div class="suggestion-card" data-prompt="Help me brainstorm 5 unique and catchy startup ideas for 2026.">
-                <i data-lucide="lightbulb" class="sug-icon text-amber"></i>
-                <div class="sug-text">
-                  <strong>Brainstorm Ideas</strong>
-                  <span>Generate creative strategies and concepts</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Messages Stream -->
-          <div class="messages-list" id="messagesList"></div>
-        </div>
-
-        <!-- Floating Bottom Input Bar (ChatGPT/Claude style) -->
-        <div class="chat-input-container">
-          <!-- Attached Files Preview Box -->
-          <div class="attached-files-container" id="attachedFilesContainer" style="display:none;"></div>
-
-          <div class="input-card">
-            <!-- Hidden File Input -->
-            <input type="file" id="fileInput" accept=".txt,.md,.json,.csv,.py,.js,.html,.css,.xml,.pdf,.log" multiple style="display:none;">
-            
-            <button class="btn-attach" id="btnUploadFile" title="Attach Document / Code File (.txt, .pdf, .py, .json, .csv)">
-              <i data-lucide="paperclip"></i>
-            </button>
-            <button class="btn-attach" id="btnQuickTeach" title="Knowledge Settings">
-              <i data-lucide="sparkles"></i>
-            </button>
-            <button class="btn-attach" id="btnQuickIngest" title="Paste Notes / Text">
-              <i data-lucide="file-text"></i>
-            </button>
-            <textarea id="chatInput" placeholder="Ask CogniPulse anything..." rows="1"></textarea>
-            <button class="btn-send-main" id="btnSendChat" title="Send Message">
-              <i data-lucide="arrow-up"></i>
-            </button>
-          </div>
-          <div class="input-disclaimer">
-            CogniPulse can make mistakes. Verify important information.
-          </div>
-        </div>
-
-
-      </div>
-
-      <!-- VIEW 2: 3D Neural Synapse Studio -->
-      <div id="brain-view" class="view-panel">
-        <div class="drawer-view-container">
-          <div class="drawer-header">
-            <div>
-              <h2><i data-lucide="activity" class="text-cyan"></i> 3D Neural Synaptic Core</h2>
-              <p>Visualizing active memory nodes, synaptic interlinks, and real-time firing impulses.</p>
-            </div>
-            <button class="btn-pill-action btn-close-view"><i data-lucide="arrow-left"></i> Back to Chat</button>
-          </div>
-          <div class="canvas-wrapper">
-            <canvas id="neuralCanvas"></canvas>
-          </div>
-        </div>
-      </div>
-
-      <!-- VIEW 3: Knowledge Graph -->
-      <div id="graph-view" class="view-panel">
-        <div class="drawer-view-container">
-          <div class="drawer-header">
-            <div>
-              <h2><i data-lucide="share-2" class="text-emerald"></i> Autonomous Knowledge Graph</h2>
-              <p>Entities and relational triples autonomously extracted and connected by CogniPulse.</p>
-            </div>
-            <button class="btn-pill-action btn-close-view"><i data-lucide="arrow-left"></i> Back to Chat</button>
-          </div>
-          <div class="canvas-wrapper">
-            <canvas id="kgCanvas"></canvas>
-          </div>
-          <div class="graph-details-bar" id="kgNodeDetails">
-            Hover over or click any node to inspect conceptual relations.
-          </div>
-        </div>
-      </div>
-
-      <!-- VIEW 4: RL Simulation Lab -->
-      <div id="sim-view" class="view-panel">
-        <div class="drawer-view-container">
-          <div class="drawer-header">
-            <div>
-              <h2><i data-lucide="gamepad-2" class="text-amber"></i> Reinforcement Learning Lab</h2>
-              <p>Autonomous agent navigating dynamic GridWorld with live Q-value policy learning.</p>
-            </div>
-            <button class="btn-pill-action btn-close-view"><i data-lucide="arrow-left"></i> Back to Chat</button>
-          </div>
-          <div class="sim-grid-layout">
-            <div class="sim-left">
-              <canvas id="simCanvas" width="440" height="440"></canvas>
-              <div class="sim-actions-row">
-                <button class="btn-pill-action" id="btnSimStep"><i data-lucide="play"></i> Step</button>
-                <button class="btn-pill-action" id="btnSimAutoPlay"><i data-lucide="fast-forward"></i> Auto Learn</button>
-                <button class="btn-pill-action" id="btnSimTrainBatch"><i data-lucide="zap"></i> Train Batch (25 Ep)</button>
-                <button class="btn-pill-action" id="btnSimReset"><i data-lucide="rotate-ccw"></i> Reset</button>
-              </div>
-            </div>
-            <div class="sim-right">
-              <div class="sim-metric-card">
-                <span class="sim-metric-val" id="simEpisodeVal">0</span>
-                <span class="sim-metric-lbl">Episodes</span>
-              </div>
-              <div class="sim-metric-card">
-                <span class="sim-metric-val" id="simStepsVal">0</span>
-                <span class="sim-metric-lbl">Steps</span>
-              </div>
-              <div class="sim-metric-card">
-                <span class="sim-metric-val text-amber" id="simLossVal">0.000</span>
-                <span class="sim-metric-lbl">TD Error</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-    </main>
-  </div>
-
-  <!-- MODAL: Teach Fact -->
   <div class="modal-backdrop" id="teachModal">
-    <div class="modal-box">
-      <div class="modal-head">
-        <div class="modal-title"><i data-lucide="sparkles" class="text-cyan"></i> Teach CogniPulse</div>
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i data-lucide="sparkles" class="text-cyan"></i>
+          <span>Teach Ground Truth</span>
+        </div>
         <button class="btn-modal-close" id="btnCloseTeachModal">&times;</button>
       </div>
       <div class="modal-body">
-        <label>Ground Truth / Fact:</label>
-        <textarea id="modalFactText" placeholder="e.g. Mitochondria are membrane-bound cell organelles that generate chemical energy (ATP)." rows="3"></textarea>
-        
-        <label>Category:</label>
-        <select id="modalFactCategory">
-          <option value="fact">Scientific / Factual Knowledge</option>
-          <option value="rule">Reasoning Rule / Heuristic</option>
-          <option value="identity">Identity & Core Belief</option>
-        </select>
-      </div>
-      <div class="modal-foot">
-        <button class="btn-subtle" id="btnCancelTeach">Cancel</button>
-        <button class="btn-primary" id="btnSubmitTeach">Assimiliate Fact</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL: Ingest Document -->
-  <div class="modal-backdrop" id="ingestModal">
-    <div class="modal-box">
-      <div class="modal-head">
-        <div class="modal-title"><i data-lucide="file-plus" class="text-purple"></i> Digest Document / Notes</div>
-        <button class="btn-modal-close" id="btnCloseIngestModal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <label>Paste Unstructured Text / Documentation:</label>
-        <textarea id="ingestTextInput" placeholder="Paste notes, articles, or research text here..." rows="5"></textarea>
-      </div>
-      <div class="modal-foot">
-        <button class="btn-subtle" id="btnCancelIngest">Cancel</button>
-        <button class="btn-primary" id="btnSubmitIngest">Digest & Learn</button>
+        <p class="modal-desc">
+          Directly inject verified ground truth into CogniPulse's neural core.
+        </p>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="modalFactCategory" class="form-input">
+            <option value="fact">General Fact / Science</option>
+            <option value="rule">Logical Heuristic Rule</option>
+            <option value="identity">Agent Identity / Capability</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Knowledge Proposition</label>
+          <textarea id="modalFactText" class="form-input" rows="3" placeholder="e.g. The James Webb Space Telescope orbits the Sun-Earth L2 Lagrange point."></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn-ghost" id="btnCancelTeach">Cancel</button>
+          <button class="btn-primary" id="btnSubmitTeach">Assimilate Fact</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL: Correction Feedback -->
-  <div class="modal-backdrop" id="correctModal">
-    <div class="modal-box">
-      <div class="modal-head">
-        <div class="modal-title"><i data-lucide="wrench" class="text-amber"></i> Correct Inference</div>
-        <button class="btn-modal-close" id="btnCloseCorrectModal">&times;</button>
-      </div>
-      <div class="modal-body">
-        <p class="text-sm text-muted">Provide the correct ground truth. CogniPulse will penalize mistaken weights and synthesize an adaptive rule.</p>
-        <label>Ground Truth Correction:</label>
-        <textarea id="modalCorrectionText" placeholder="What should the correct response or rule be?" rows="3"></textarea>
-      </div>
-      <div class="modal-foot">
-        <button class="btn-subtle" id="btnCancelCorrect">Cancel</button>
-        <button class="btn-primary" id="btnSubmitCorrection">Apply Correction</button>
-      </div>
-    </div>
-  </div>
-
-  <script src="neural_visualizer.js?v=1.2"></script>
-  <script src="knowledge_graph_view.js?v=1.2"></script>
-  <script src="simulation_view.js?v=1.2"></script>
-  <script src="app.js?v=1.2"></script>
+  <!-- Scripts -->
+  <script src="neural_visualizer.js?v=2.0"></script>
+  <script src="knowledge_graph_view.js?v=2.0"></script>
+  <script src="simulation_view.js?v=2.0"></script>
+  <script src="app.js?v=2.0"></script>
 </body>
 </html>
-
