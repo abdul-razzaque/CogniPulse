@@ -139,26 +139,32 @@ class LiveSearchEngine:
 
         return None
 
-    def fetch_duckduckgo_instant(self, query: str) -> Optional[Dict[str, Any]]:
-        """Queries DuckDuckGo Instant Answer API."""
+    def search_duckduckgo_html(self, query: str) -> Optional[Dict[str, Any]]:
+        """Scrapes live web snippets from DuckDuckGo HTML search."""
         q_norm = self.normalize_query(query)
         encoded = urllib.parse.quote(q_norm)
-        url = f"https://api.duckduckgo.com/?q={encoded}&format=json&no_html=1&skip_disambig=1"
+        url = f"https://html.duckduckgo.com/html/?q={encoded}"
 
         try:
-            req = urllib.request.Request(url, headers=self.headers)
-            with urllib.request.urlopen(req, timeout=3.5) as resp:
-                if resp.status == 200:
-                    data = json.loads(resp.read().decode('utf-8'))
-                    abstract = data.get("AbstractText", "") or data.get("Answer", "")
-                    heading = data.get("Heading", query)
-                    if abstract and len(abstract) > 20:
-                        return {
-                            "source": "DuckDuckGo Knowledge",
-                            "title": heading,
-                            "summary": abstract,
-                            "url": data.get("AbstractURL", "")
-                        }
+            req = urllib.request.Request(url, headers={
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+            })
+            with urllib.request.urlopen(req, timeout=4.5) as resp:
+                content = resp.read().decode('utf-8')
+                snippets = re.findall(r'<a class="result__snippet[^"]*"[^>]*>(.*?)</a>', content, re.DOTALL)
+                clean_snippets = []
+                for s in snippets[:4]:
+                    clean = html.unescape(re.sub(r'<[^>]+>', '', s)).strip()
+                    if clean and len(clean) > 25:
+                        clean_snippets.append(f"• {clean}")
+
+                if clean_snippets:
+                    return {
+                        "source": "Live Web Multi-Search",
+                        "title": query.capitalize(),
+                        "summary": "\n\n".join(clean_snippets),
+                        "url": f"https://duckduckgo.com/?q={encoded}"
+                    }
         except Exception:
             pass
         return None
@@ -168,8 +174,8 @@ class LiveSearchEngine:
         Multi-tier search:
         1. Local Core Knowledge Check
         2. Direct Wikipedia Summary
-        3. Wikipedia OpenSearch
-        4. DuckDuckGo Instant Knowledge
+        3. Live DuckDuckGo Multi-Search
+        4. Wikipedia Search
         """
         # Tier 1: Local Knowledge
         local_ans = self.check_local_knowledge(query)
@@ -186,14 +192,15 @@ class LiveSearchEngine:
         if wiki_direct:
             return wiki_direct
 
-        # Tier 3: Wikipedia Search
+        # Tier 3: Live DuckDuckGo Multi-Search (HTML Scraper)
+        ddg_html = self.search_duckduckgo_html(query)
+        if ddg_html:
+            return ddg_html
+
+        # Tier 4: Wikipedia Search
         wiki_search = self.fetch_wikipedia_search(query)
         if wiki_search:
             return wiki_search
 
-        # Tier 4: DuckDuckGo
-        ddg_res = self.fetch_duckduckgo_instant(query)
-        if ddg_res:
-            return ddg_res
-
         return None
+

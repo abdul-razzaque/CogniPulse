@@ -236,6 +236,58 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnSendChat.addEventListener('click', handleSendMessage);
 
+  // AI Settings Elements & Modals
+  const aiSettingsModal = document.getElementById('aiSettingsModal');
+  const btnOpenAiSettings = document.getElementById('btnOpenAiSettings');
+  const btnCloseAiSettingsModal = document.getElementById('btnCloseAiSettingsModal');
+  const aiProviderSelect = document.getElementById('aiProviderSelect');
+  const inputCustomApiKey = document.getElementById('inputCustomApiKey');
+  const btnSaveAiSettings = document.getElementById('btnSaveAiSettings');
+  const btnClearApiKey = document.getElementById('btnClearApiKey');
+
+  // Load saved settings
+  const savedProvider = localStorage.getItem('cognipulse_ai_provider') || 'auto';
+  const savedApiKey = localStorage.getItem('cognipulse_api_key') || '';
+  if (aiProviderSelect) aiProviderSelect.value = savedProvider;
+  if (inputCustomApiKey) inputCustomApiKey.value = savedApiKey;
+
+  if (btnOpenAiSettings && aiSettingsModal) {
+    btnOpenAiSettings.addEventListener('click', () => {
+      aiSettingsModal.style.display = 'flex';
+      if (inputCustomApiKey) inputCustomApiKey.value = localStorage.getItem('cognipulse_api_key') || '';
+      if (aiProviderSelect) aiProviderSelect.value = localStorage.getItem('cognipulse_ai_provider') || 'auto';
+    });
+  }
+
+  if (btnCloseAiSettingsModal && aiSettingsModal) {
+    btnCloseAiSettingsModal.addEventListener('click', () => {
+      aiSettingsModal.style.display = 'none';
+    });
+  }
+
+  if (btnSaveAiSettings) {
+    btnSaveAiSettings.addEventListener('click', () => {
+      const p = aiProviderSelect ? aiProviderSelect.value : 'auto';
+      const k = inputCustomApiKey ? inputCustomApiKey.value.trim() : '';
+      localStorage.setItem('cognipulse_ai_provider', p);
+      if (k) {
+        localStorage.setItem('cognipulse_api_key', k);
+      } else {
+        localStorage.removeItem('cognipulse_api_key');
+      }
+      aiSettingsModal.style.display = 'none';
+      alert('AI Engine settings saved successfully!');
+    });
+  }
+
+  if (btnClearApiKey) {
+    btnClearApiKey.addEventListener('click', () => {
+      localStorage.removeItem('cognipulse_api_key');
+      if (inputCustomApiKey) inputCustomApiKey.value = '';
+      alert('API Key cleared.');
+    });
+  }
+
   // ==========================================
   // 2. Chat Message Flow & Thought Accordion
   // ==========================================
@@ -277,11 +329,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Trigger visual pulse
     neuralVis.triggerPulse();
 
+    const currentApiKey = localStorage.getItem('cognipulse_api_key') || null;
+    const currentProvider = localStorage.getItem('cognipulse_ai_provider') || 'auto';
+
     try {
       const resp = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: fullQueryPayload })
+        body: JSON.stringify({
+          query: fullQueryPayload,
+          apiKey: currentApiKey,
+          provider: currentProvider
+        })
       });
       const data = await resp.json();
 
@@ -306,6 +365,7 @@ document.addEventListener('DOMContentLoaded', () => {
       appendSystemError(`Error connecting to CogniPulse: ${err.message}`);
     }
   }
+
 
   function appendUserMessage(content, attachedFiles = []) {
     const row = document.createElement('div');

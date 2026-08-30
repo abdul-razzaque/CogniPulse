@@ -45,9 +45,13 @@ class handler(BaseHTTPRequestHandler):
             payload = {}
 
         query = payload.get("query", "").strip()
+        custom_key = payload.get("apiKey", None)
+        provider = payload.get("provider", "auto")
+
         if not query:
             query = "Hello CogniPulse"
 
-        result = brain.think_and_respond(query)
+        result = brain.think_and_respond(query, custom_api_key=custom_key, provider=provider)
         self._set_headers(200)
         self.wfile.write(json.dumps(result).encode("utf-8"))
+

@@ -14,6 +14,7 @@ from .learning_engine import LearningEngine
 from .neural_sim import GridWorldSimulation
 from .search_engine import LiveSearchEngine
 from .multilingual import MultilingualEngine
+from .llm_connector import LLMConnector
 
 # Foundational Knowledge Matrix with Typo Tolerance
 FOUNDATIONAL_FACTS = [
@@ -46,7 +47,7 @@ FOUNDATIONAL_FACTS = [
 
 class CogniPulseBrain:
     """
-    Unified CogniPulse Cognitive Core with Real-Time Web Search, Worldwide Multilingual Intelligence,
+    Unified CogniPulse Cognitive Core with Real-Time Web Search, Multi-Model LLM Intelligence,
     and Continuous Synaptic Plasticity.
     """
     def __init__(self):
@@ -56,10 +57,11 @@ class CogniPulseBrain:
         self.sim = GridWorldSimulation()
         self.search_engine = LiveSearchEngine()
         self.multilingual = MultilingualEngine()
+        self.llm = LLMConnector()
         self.session_interactions = 0
         self.neural_firing_log: List[Dict[str, Any]] = []
 
-    def think_and_respond(self, user_query: str) -> Dict[str, Any]:
+    def think_and_respond(self, user_query: str, custom_api_key: Optional[str] = None, provider: str = "auto") -> Dict[str, Any]:
         t0 = time.time()
         self.session_interactions += 1
         query_clean = user_query.strip()
@@ -97,29 +99,40 @@ class CogniPulseBrain:
                 "timestamp": time.time()
             })
 
-
-        # Step 4: Live Web Search & Knowledge Synthesis
-        raw_response, search_info = self._synthesize_with_live_search(core_subject, recalled, subgraph)
-
-        # Translate/Mirror response into user's detected language / script
-        response_text = self.multilingual.translate_response_to_target_language(raw_response, detected_lang)
-
-        if search_info:
+        # Step 4: Real-Time Web Search Context Retrieval
+        search_result = self.search_engine.search_live_web(core_subject)
+        search_context = ""
+        if search_result:
+            search_context = f"{search_result.get('title', '')}: {search_result.get('summary', '')}"
             thought_stream.append({
-                "stage": "WEB_RETRIEVAL",
-                "message": f"Retrieved ground truth for '{core_subject}' from {search_info.get('source', 'Live Web')}: '{search_info.get('title', '')}'",
-                "details": [f"Source: {search_info.get('source', '')}", f"Summary: {search_info.get('summary', '')[:120]}..."],
+                "stage": "WEB_SEARCH",
+                "message": f"Retrieved live multi-source facts for '{core_subject}' from {search_result.get('source', 'Web')}",
+                "details": [f"Source: {search_result.get('source', '')}", f"Summary: {search_result.get('summary', '')[:140]}..."],
                 "timestamp": time.time()
             })
 
-        thought_stream.append({
-            "stage": "SYNTHESIS",
-            "message": f"Synthesized response in {detected_lang.upper().replace('_', ' ')} with synaptic consolidation.",
-            "timestamp": time.time()
-        })
+        # Step 5: High-Intelligence LLM Synthesis (If Key Available)
+        llm_response = self.llm.generate_response(user_query, search_context=search_context, custom_api_key=custom_api_key, provider=provider)
+        if llm_response:
+            thought_stream.append({
+                "stage": "LLM_INFERENCE",
+                "message": "Synthesized response using advanced neural LLM reasoning with live web ground truth.",
+                "timestamp": time.time()
+            })
+            response_text = llm_response
+        else:
+            # Fallback to Autonomous Multi-Tier Synthesizer
+            raw_response, search_info = self._synthesize_with_live_search(core_subject, recalled, subgraph)
+            response_text = self.multilingual.translate_response_to_target_language(raw_response, detected_lang)
 
+            thought_stream.append({
+                "stage": "SYNTHESIS",
+                "message": f"Synthesized response in {detected_lang.upper().replace('_', ' ')} with synaptic consolidation.",
+                "timestamp": time.time()
+            })
 
         # Step 5: Memory Consolidation
+
         # Store user interaction for history tracking
         self.memory.store_memory(
             content=f"Q: '{query_clean}' -> A: '{response_text[:140]}...'",

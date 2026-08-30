@@ -44,6 +44,50 @@
         </button>
       </div>
 
+      <!-- AI Engine & Model Settings Modal -->
+  <div class="modal-backdrop" id="aiSettingsModal" style="display:none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">
+          <i data-lucide="cpu" class="text-cyan"></i>
+          <span>AI Engine & Model Settings</span>
+        </div>
+        <button class="btn-modal-close" id="btnCloseAiSettingsModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="modal-desc">
+          CogniPulse connects to live web search & advanced AI models to provide human-level answers to any question.
+        </p>
+
+        <div class="form-group">
+          <label for="aiProviderSelect">AI Intelligence Provider</label>
+          <select id="aiProviderSelect" class="form-input">
+            <option value="auto">🌐 Autonomous Web Search & Multi-Model Hybrid (Default)</option>
+            <option value="groq">⚡ Groq API (Llama-3.3 70B - Lightning Fast & Free)</option>
+            <option value="gemini">🌟 Google Gemini API (Gemini 1.5 Flash - Free Tier)</option>
+            <option value="openai">🤖 OpenAI (GPT-4o Mini)</option>
+            <option value="openrouter">🚀 OpenRouter (DeepSeek / Claude / Llama)</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="apiKeyFormGroup">
+          <label for="inputCustomApiKey">API Key <span class="text-dim">(Optional - Saved locally in browser)</span></label>
+          <input type="password" id="inputCustomApiKey" class="form-input" placeholder="e.g. gsk_... or AIzaSy...">
+          <small class="form-hint" id="apiKeyHelpText">
+            Get a 100% free Groq key at <a href="https://console.groq.com/keys" target="_blank" class="link-cyan">console.groq.com</a> or Google Gemini key at <a href="https://aistudio.google.com/" target="_blank" class="link-cyan">aistudio.google.com</a>.
+          </small>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-ghost" id="btnClearApiKey">Clear Key</button>
+          <button class="btn-primary" id="btnSaveAiSettings">Save Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Teach Fact Modal -->
+
       <!-- Nav Sections -->
       <div class="sidebar-scroll">
         <div class="sidebar-section-title">Cognitive Capabilities</div>
@@ -122,16 +166,19 @@
         </div>
         
         <div class="header-right">
-          <button class="btn-pill-action" id="btnHeaderTeach">
-            <i data-lucide="sparkles"></i>
-            <span>Teach Fact</span>
+          <div class="status-indicator">
+            <span class="status-dot"></span>
+            <span class="status-text">Connected</span>
+          </div>
+          <button class="btn-ghost" id="btnOpenAiSettings" title="Configure AI Model & Live Search">
+            <i data-lucide="settings"></i> <span>AI Engine</span>
           </button>
-          <button class="btn-pill-action" id="btnHeaderBrainView">
-            <i data-lucide="activity"></i>
-            <span>Neural Visualizer</span>
+          <button class="btn-primary-glow" id="btnHeaderTeach">
+            <i data-lucide="sparkles"></i> <span>Teach Fact</span>
           </button>
         </div>
       </header>
+
 
       <!-- VIEW 1: Modern Chat Container -->
       <div id="chat-view" class="view-panel active">
