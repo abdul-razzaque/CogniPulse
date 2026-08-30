@@ -129,14 +129,19 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       const data = await resp.json();
 
+      if (!resp.ok || data.error) {
+        appendMessage(`⚠️ CogniPulse Error: ${data.error || 'Unexpected response'}`, 'system');
+        return;
+      }
+
       // Append Model Message
-      appendMessage(data.response, 'model', text, data);
+      appendMessage(data.response || "Knowledge processed.", 'model', text, data);
 
       // Render Cognitive Stream
-      renderThoughtStream(data.thought_stream, data.latency_ms);
+      renderThoughtStream(data.thought_stream || [], data.latency_ms || 0);
 
       // Render Recalled Synaptic Nodes
-      renderRecalledMemories(data.recalled_memories);
+      renderRecalledMemories(data.recalled_memories || []);
 
       // Trigger active firing node highlight in visualizer
       if (data.firing_event && data.firing_event.activated_memories) {
@@ -155,7 +160,9 @@ document.addEventListener('DOMContentLoaded', () => {
     card.className = `message-card ${type === 'user' ? 'user-msg' : (type === 'model' ? 'model-msg' : 'system-message')}`;
 
     let avatarIcon = type === 'user' ? 'user' : (type === 'model' ? 'brain-circuit' : 'info');
-    let formattedText = content.replace(/\n/g, '<br/>');
+    let safeContent = (content !== undefined && content !== null) ? String(content) : '';
+    let formattedText = safeContent.replace(/\n/g, '<br/>');
+
 
     let actionsHtml = '';
     if (type === 'model' && queryContext) {

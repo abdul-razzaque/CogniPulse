@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from cognipulse_core.brain import CogniPulseBrain
 
 # In Serverless environments, /tmp is writable
-IS_VERCEL = os.environ.get("VERCEL", "0") == "1"
+IS_VERCEL = os.environ.get("VERCEL", "0") == "1" or os.environ.get("AWS_LAMBDA_FUNCTION_NAME") is not None
 if IS_VERCEL:
     brain = CogniPulseBrain()
     brain.memory.storage_path = "/tmp/cognipulse_memory.json"
@@ -30,35 +30,46 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
         self.end_headers()
 
     def do_OPTIONS(self):
         self._set_json_headers(200)
 
+    def _get_payload(self):
+        try:
+            cl = self.headers.get('Content-Length') or self.headers.get('content-length')
+            content_len = int(cl) if cl else 0
+            if content_len > 0:
+                raw = self.rfile.read(content_len).decode('utf-8')
+                return json.loads(raw) if raw else {}
+            return {}
+        except Exception:
+            return {}
+
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path.rstrip('/')
 
-        if path.endswith("/telemetry") or path == "/api/telemetry":
+        if path.endswith("/telemetry") or "/telemetry" in path:
             self._set_json_headers(200)
             telemetry = brain.get_full_telemetry()
             self.wfile.write(json.dumps(telemetry).encode("utf-8"))
             return
 
-        if path.endswith("/memories") or path == "/api/memories":
+        if path.endswith("/memories") or "/memories" in path:
             self._set_json_headers(200)
             mems = [m.to_dict() for m in brain.memory.memories.values()]
             self.wfile.write(json.dumps({"memories": mems}).encode("utf-8"))
             return
 
-        if path.endswith("/graph") or path == "/api/graph":
+        if path.endswith("/graph") or "/graph" in path:
             self._set_json_headers(200)
             graph_data = brain.kg.get_graph_export(max_nodes=60)
             self.wfile.write(json.dumps(graph_data).encode("utf-8"))
             return
 
-        if path.endswith("/sim/state") or path == "/api/sim/state":
+        if path.endswith("/sim/state") or "/sim/state" in path:
             self._set_json_headers(200)
             sim_state = brain.sim.get_state()
             self.wfile.write(json.dumps(sim_state).encode("utf-8"))
@@ -71,60 +82,58 @@ class handler(BaseHTTPRequestHandler):
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
         path = parsed.path.rstrip('/')
+        payload = self._get_payload()
 
-        content_len = int(self.headers.get('Content-Length', 0))
-        post_body = self.rfile.read(content_len).decode('utf-8') if content_len > 0 else "{}"
-        
-        try:
-            payload = json.loads(post_body) if post_body else {}
-        except Exception:
-            payload = {}
-
-        if path.endswith("/chat") or path == "/api/chat":
+        if path.endswith("/chat") or "/chat" in path:
             query = payload.get("query", "")
-            if not query.strip():
-                self._set_json_headers(400)
-                self.wfile.write(json.dumps({"error": "Query cannot be empty"}).encode("utf-8"))
+            if not query or not str(query).strip():
+                self._set_json_headers(200)
+                self.wfile.write(json.dumps({
+                    "response": "Hello! I am CogniPulse, an autonomous self-learning AI model. How can I assist or learn from you today?",
+                    "thought_stream": [{"stage": "PERCEPTION", "message": "Received initial contact.", "timestamp": 0}],
+                    "recalled_memories": [],
+                    "latency_ms": 1.0
+                }).encode("utf-8"))
                 return
             
-            result = brain.think_and_respond(query)
+            result = brain.think_and_respond(str(query))
             self._set_json_headers(200)
             self.wfile.write(json.dumps(result).encode("utf-8"))
             return
 
-        if path.endswith("/teach") or path == "/api/teach":
+        if path.endswith("/teach") or "/teach" in path:
             fact = payload.get("fact", "")
             category = payload.get("category", "fact")
-            if not fact.strip():
+            if not fact or not str(fact).strip():
                 self._set_json_headers(400)
                 self.wfile.write(json.dumps({"error": "Fact cannot be empty"}).encode("utf-8"))
                 return
             
-            result = brain.teach_fact(fact, category)
+            result = brain.teach_fact(str(fact), str(category))
             self._set_json_headers(200)
             self.wfile.write(json.dumps(result).encode("utf-8"))
             return
 
-        if path.endswith("/feedback") or path == "/api/feedback":
+        if path.endswith("/feedback") or "/feedback" in path:
             query = payload.get("query", "")
             response = payload.get("response", "")
             is_pos = payload.get("is_positive", True)
             correction = payload.get("correction", None)
             
-            result = brain.provide_feedback(query, response, is_pos, correction)
+            result = brain.provide_feedback(str(query), str(response), bool(is_pos), correction)
             self._set_json_headers(200)
             self.wfile.write(json.dumps(result).encode("utf-8"))
             return
 
-        if path.endswith("/ingest") or path == "/api/ingest":
+        if path.endswith("/ingest") or "/ingest" in path:
             text = payload.get("text", "")
-            if not text.strip():
+            if not text or not str(text).strip():
                 self._set_json_headers(400)
                 self.wfile.write(json.dumps({"error": "Text cannot be empty"}).encode("utf-8"))
                 return
             
-            brain.memory.store_memory(f"Ingested Document: {text[:200]}...", category="fact", confidence=1.0, tags=["document"])
-            kg_res = brain.kg.extract_and_ingest(text)
+            brain.memory.store_memory(f"Ingested Document: {str(text)[:200]}...", category="fact", confidence=1.0, tags=["document"])
+            kg_res = brain.kg.extract_and_ingest(str(text))
             
             self._set_json_headers(200)
             self.wfile.write(json.dumps({
@@ -136,29 +145,29 @@ class handler(BaseHTTPRequestHandler):
             }).encode("utf-8"))
             return
 
-        if path.endswith("/sim/step") or path == "/api/sim/step":
+        if path.endswith("/sim/step") or "/sim/step" in path:
             res = brain.sim.step()
             self._set_json_headers(200)
             self.wfile.write(json.dumps(res).encode("utf-8"))
             return
 
-        if path.endswith("/sim/train") or path == "/api/sim/train":
+        if path.endswith("/sim/train") or "/sim/train" in path:
             episodes = int(payload.get("episodes", 20))
             res = brain.sim.run_episodes(episodes)
             self._set_json_headers(200)
             self.wfile.write(json.dumps(res).encode("utf-8"))
             return
 
-        if path.endswith("/sim/reset") or path == "/api/sim/reset":
+        if path.endswith("/sim/reset") or "/sim/reset" in path:
             brain.sim.reset_agent()
             self._set_json_headers(200)
             self.wfile.write(json.dumps({"status": "reset", "agent_pos": brain.sim.agent_pos}).encode("utf-8"))
             return
 
-        if path.endswith("/memory/reinforce") or path == "/api/memory/reinforce":
+        if path.endswith("/memory/reinforce") or "/memory/reinforce" in path:
             mem_id = payload.get("id", "")
             delta = float(payload.get("delta", 0.5))
-            brain.memory.reinforce_memory_by_id(mem_id, delta)
+            brain.memory.reinforce_memory_by_id(str(mem_id), delta)
             self._set_json_headers(200)
             self.wfile.write(json.dumps({"status": "reinforced", "mem_id": mem_id}).encode("utf-8"))
             return
