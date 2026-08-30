@@ -13,6 +13,7 @@ from .knowledge_graph import DynamicKnowledgeGraph
 from .learning_engine import LearningEngine
 from .neural_sim import GridWorldSimulation
 from .search_engine import LiveSearchEngine
+from .multilingual import MultilingualEngine
 
 # Foundational Knowledge Matrix with Typo Tolerance
 FOUNDATIONAL_FACTS = [
@@ -45,7 +46,8 @@ FOUNDATIONAL_FACTS = [
 
 class CogniPulseBrain:
     """
-    Unified CogniPulse Cognitive Core with Real-Time Web Search & Continuous Learning.
+    Unified CogniPulse Cognitive Core with Real-Time Web Search, Worldwide Multilingual Intelligence,
+    and Continuous Synaptic Plasticity.
     """
     def __init__(self):
         self.memory = CogniMemorySystem()
@@ -53,6 +55,7 @@ class CogniPulseBrain:
         self.learning = LearningEngine()
         self.sim = GridWorldSimulation()
         self.search_engine = LiveSearchEngine()
+        self.multilingual = MultilingualEngine()
         self.session_interactions = 0
         self.neural_firing_log: List[Dict[str, Any]] = []
 
@@ -62,12 +65,16 @@ class CogniPulseBrain:
         query_clean = user_query.strip()
         thought_stream = []
 
-        # Step 1: Perception
+        # Step 1: Multilingual Detection & Intent Normalization
+        detected_lang = self.multilingual.detect_language(query_clean)
+        normalized_query = self.multilingual.normalize_romanized_query(query_clean)
+
         thought_stream.append({
             "stage": "PERCEPTION",
-            "message": f"Analyzing stimulus: '{query_clean}'",
+            "message": f"Language: {detected_lang.upper().replace('_', ' ')} | Normalized Intent: '{normalized_query}'",
             "timestamp": time.time()
         })
+
 
         # Step 2: Associative Memory Recall (Filtered: Only factual & user-taught nodes, NOT raw interaction logs)
         all_recalled = self.memory.recall(query_clean, top_k=5, threshold=0.15)
@@ -95,21 +102,25 @@ class CogniPulseBrain:
         })
 
         # Step 4: Live Web Search & Knowledge Synthesis
-        response_text, search_info = self._synthesize_with_live_search(query_clean, recalled, subgraph)
+        raw_response, search_info = self._synthesize_with_live_search(normalized_query, recalled, subgraph)
+
+        # Translate/Mirror response into user's detected language / script
+        response_text = self.multilingual.translate_response_to_target_language(raw_response, detected_lang)
 
         if search_info:
             thought_stream.append({
                 "stage": "WEB_RETRIEVAL",
-                "message": f"Connected to live internet ({search_info.get('source', 'Web')}) and retrieved verified ground truth: '{search_info.get('title', '')}'",
-                "details": [f"Source: {search_info.get('source', '')}", f"Snippet: {search_info.get('summary', '')[:120]}..."],
+                "message": f"Retrieved ground truth from {search_info.get('source', 'Live Web')}: '{search_info.get('title', '')}'",
+                "details": [f"Source: {search_info.get('source', '')}", f"Summary: {search_info.get('summary', '')[:120]}..."],
                 "timestamp": time.time()
             })
 
         thought_stream.append({
             "stage": "SYNTHESIS",
-            "message": "Formulated response, updated synaptic plasticity, and assimilated new concepts into knowledge graph.",
+            "message": f"Synthesized response in {detected_lang.upper().replace('_', ' ')} with synaptic consolidation.",
             "timestamp": time.time()
         })
+
 
         # Step 5: Memory Consolidation
         # Store user interaction for history tracking
