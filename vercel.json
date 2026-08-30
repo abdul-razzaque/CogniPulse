@@ -2,12 +2,20 @@
   "version": 2,
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/index.py"
+      "source": "/api/sim/step",
+      "destination": "/api/sim"
     },
     {
-      "source": "/api",
-      "destination": "/api/index.py"
+      "source": "/api/sim/train",
+      "destination": "/api/sim"
+    },
+    {
+      "source": "/api/sim/reset",
+      "destination": "/api/sim"
+    },
+    {
+      "source": "/api/sim/state",
+      "destination": "/api/sim"
     }
   ]
 }
