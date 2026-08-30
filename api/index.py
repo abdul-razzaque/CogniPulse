@@ -38,7 +38,7 @@ class handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         parsed = urllib.parse.urlparse(self.path)
-        path = parsed.path
+        path = parsed.path.rstrip('/')
 
         if path.endswith("/telemetry") or path == "/api/telemetry":
             self._set_json_headers(200)
@@ -64,12 +64,13 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(sim_state).encode("utf-8"))
             return
 
-        self._set_json_headers(404)
-        self.wfile.write(json.dumps({"error": "Endpoint not found"}).encode("utf-8"))
+        # Fallback for health check
+        self._set_json_headers(200)
+        self.wfile.write(json.dumps({"status": "online", "message": "CogniPulse API is running"}).encode("utf-8"))
 
     def do_POST(self):
         parsed = urllib.parse.urlparse(self.path)
-        path = parsed.path
+        path = parsed.path.rstrip('/')
 
         content_len = int(self.headers.get('Content-Length', 0))
         post_body = self.rfile.read(content_len).decode('utf-8') if content_len > 0 else "{}"
