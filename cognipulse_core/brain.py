@@ -15,6 +15,8 @@ from .neural_sim import GridWorldSimulation
 from .search_engine import LiveSearchEngine
 from .multilingual import MultilingualEngine
 from .llm_connector import LLMConnector
+from .problem_solver import UniversalProblemSolver
+
 
 # Foundational Knowledge Matrix with Typo Tolerance
 FOUNDATIONAL_FACTS = [
@@ -48,7 +50,7 @@ FOUNDATIONAL_FACTS = [
 class CogniPulseBrain:
     """
     Unified CogniPulse Cognitive Core with Real-Time Web Search, Multi-Model LLM Intelligence,
-    and Continuous Synaptic Plasticity.
+    Step-by-Step Problem Solving, and Continuous Synaptic Plasticity.
     """
     def __init__(self):
         self.memory = CogniMemorySystem()
@@ -58,14 +60,17 @@ class CogniPulseBrain:
         self.search_engine = LiveSearchEngine()
         self.multilingual = MultilingualEngine()
         self.llm = LLMConnector()
+        self.problem_solver = UniversalProblemSolver()
         self.session_interactions = 0
         self.neural_firing_log: List[Dict[str, Any]] = []
+
 
     def think_and_respond(self, user_query: str, custom_api_key: Optional[str] = None, provider: str = "auto") -> Dict[str, Any]:
         t0 = time.time()
         self.session_interactions += 1
         query_clean = user_query.strip()
         thought_stream = []
+        sources = []
 
         # Step 0: Check for Attached File Payload
         if "--- FILE:" in user_query and "--- END OF FILE ---" in user_query:
@@ -86,6 +91,7 @@ class CogniPulseBrain:
             return {
                 "query": query_clean,
                 "response": response_text,
+                "sources": [],
                 "thought_stream": thought_stream,
                 "recalled_memories": [],
                 "graph_context": {},
@@ -103,12 +109,38 @@ class CogniPulseBrain:
         detected_lang = self.multilingual.detect_language(query_clean)
         core_subject = self.multilingual.extract_core_subject(query_clean)
 
-
         thought_stream.append({
             "stage": "PERCEPTION",
             "message": f"Language: {detected_lang.upper().replace('_', ' ')} | Core Subject: '{core_subject}'",
             "timestamp": time.time()
         })
+
+        # Step 1.5: Mathematical Equation or Direct Problem Solver
+        if self.problem_solver.can_solve_math(query_clean):
+            math_res = self.problem_solver.solve_math(query_clean, lang=detected_lang)
+            if math_res:
+                thought_stream.append({
+                    "stage": "MATHEMATICAL_PROOF",
+                    "message": "Computed exact algebraic / arithmetic step-by-step solution.",
+                    "timestamp": time.time()
+                })
+                latency_ms = int((time.time() - t0) * 1000)
+                return {
+                    "query": query_clean,
+                    "response": math_res,
+                    "sources": [],
+                    "thought_stream": thought_stream,
+                    "recalled_memories": [],
+                    "graph_context": {},
+                    "latency_ms": latency_ms,
+                    "firing_event": {
+                        "query": "Math Solver",
+                        "activated_memories": [],
+                        "activated_nodes": [],
+                        "latency_ms": latency_ms,
+                        "timestamp": time.time()
+                    }
+                }
 
         # Step 2: Associative Memory Recall (Filtered: Only factual & user-taught nodes)
         all_recalled = self.memory.recall(core_subject, top_k=5, threshold=0.25)
@@ -137,6 +169,7 @@ class CogniPulseBrain:
         search_context = ""
         if search_result:
             search_context = f"{search_result.get('title', '')}: {search_result.get('summary', '')}"
+            sources = search_result.get("sources", [])
             thought_stream.append({
                 "stage": "WEB_SEARCH",
                 "message": f"Retrieved live multi-source facts for '{core_subject}' from {search_result.get('source', 'Web')}",
@@ -169,6 +202,7 @@ class CogniPulseBrain:
             })
 
 
+
         # Step 5: Memory Consolidation
 
         # Store user interaction for history tracking
@@ -198,12 +232,14 @@ class CogniPulseBrain:
         return {
             "query": query_clean,
             "response": response_text,
+            "sources": sources,
             "thought_stream": thought_stream,
             "recalled_memories": [node.to_dict() for node, _ in recalled],
             "graph_context": subgraph,
             "latency_ms": latency_ms,
             "firing_event": firing_event
         }
+
 
     def _synthesize_with_live_search(self, query: str, recalled: list, subgraph: dict) -> (str, Optional[dict]):
         q_lower = query.lower()

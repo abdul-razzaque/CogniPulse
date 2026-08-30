@@ -650,6 +650,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const latency = fullData && fullData.latency_ms ? fullData.latency_ms : '14';
     const thoughtSteps = fullData && fullData.thought_stream ? fullData.thought_stream : [];
+    const sources = fullData && fullData.sources ? fullData.sources : [];
 
     let thoughtStepsHtml = '';
     if (thoughtSteps.length > 0) {
@@ -658,6 +659,24 @@ document.addEventListener('DOMContentLoaded', () => {
           <strong>[${st.stage}]</strong> ${escapeHtml(st.message)}
         </div>
       `).join('');
+    }
+
+    let sourcesHtml = '';
+    if (sources.length > 0) {
+      sourcesHtml = `
+        <div class="search-sources-bar">
+          <div class="sources-label"><i data-lucide="globe"></i> <span>Web Sources (${sources.length})</span></div>
+          <div class="sources-pills-list">
+            ${sources.map((s, idx) => `
+              <a href="${escapeHtml(s.url || '#')}" target="_blank" rel="noopener noreferrer" class="source-citation-pill" title="${escapeHtml(s.title)}">
+                <span class="src-index">${idx + 1}</span>
+                <span class="src-title">${escapeHtml(s.title.length > 26 ? s.title.substring(0, 24) + '...' : s.title)}</span>
+                <i data-lucide="external-link" class="src-ico"></i>
+              </a>
+            `).join('')}
+          </div>
+        </div>
+      `;
     }
 
     const formattedText = formatMarkdown(responseContent);
@@ -680,8 +699,12 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
 
+        <!-- Search Sources & Citations Bar (Perplexity / AI Search style) -->
+        ${sourcesHtml}
+
         <!-- AI Markdown Content -->
         <div class="ai-text">${formattedText}</div>
+
 
         <!-- AI Actions Toolbar -->
         <div class="ai-actions-bar">
