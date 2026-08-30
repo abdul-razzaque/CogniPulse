@@ -17,8 +17,11 @@ class UniversalProblemSolver:
 
     def can_solve_math(self, query: str) -> bool:
         q = query.strip().lower()
-        # Check for math keywords or equation patterns
-        math_keywords = ['solve', 'calculate', 'equation', 'derivative', 'integral', 'matrix', 'quadratic', 'integral of', 'derivative of', 'algebra', 'find x', 'value of x']
+        # Direct arithmetic pattern: e.g. "2+2", "2+2=??", "5 * 10", "100 / 4"
+        if bool(re.search(r'^\s*\(?\s*\d+\s*[\+\-\*\/\^\%]\s*\d+.*$', q)):
+            return True
+
+        math_keywords = ['solve', 'calculate', 'equation', 'derivative', 'integral', 'matrix', 'quadratic', 'algebra', 'find x', 'value of x', 'kitna hota']
         has_kw = any(k in q for k in math_keywords)
         has_eq = '=' in query and bool(re.search(r'[a-zA-Z0-9]', query))
         has_arithmetic = bool(re.search(r'\b\d+\s*[\+\-\*\/\^\%]\s*\d+\b', query))
@@ -28,7 +31,55 @@ class UniversalProblemSolver:
     def solve_math(self, query: str, lang: str = "english") -> Optional[str]:
         q_clean = query.strip()
 
-        # 1. Linear Equation in one variable: e.g. "2x + 5 = 15", "solve 3x - 9 = 0", "5x = 25"
+        # 0. Clean trailing question marks, equals signs, and prompt words
+        # e.g. "2+2=??", "what is 25 * 4?", "calculate 100/5 = ?"
+        expr_clean = re.sub(r'^(?:solve|calculate|what is|find|value of|kitna hota hai|jawab btao)?\s*', '', q_clean, flags=re.I).strip()
+        expr_clean = re.sub(r'\s*=\s*\?*\s*$', '', expr_clean).strip()
+        expr_clean = expr_clean.rstrip('?').strip()
+
+        # 1. Pure Arithmetic & Order of Operations (e.g. "2+2", "50 * 4 + 10", "(12+8)/4", "2^5", "sqrt(64)")
+        eval_candidate = expr_clean.replace('^', '**').replace('sqrt', 'math.sqrt')
+        if bool(re.search(r'\d', eval_candidate)) and any(op in eval_candidate for op in ['+', '-', '*', '/', '%', '**', 'math.sqrt']):
+            # Ensure it only contains valid mathematical characters
+            if re.match(r'^[0-9\.\s\+\-\*\/\(\)\%\,\a-z\_]+$', eval_candidate, re.I):
+                try:
+                    allowed_names = {
+                        'math': math, 'sqrt': math.sqrt, 'sin': math.sin, 'cos': math.cos,
+                        'tan': math.tan, 'pi': math.pi, 'e': math.e, 'log': math.log,
+                        'abs': abs, 'pow': pow, 'round': round
+                    }
+                    result = eval(eval_candidate, {"__builtins__": None}, allowed_names)
+                    display_expr = expr_clean
+
+                    # If simple arithmetic (like 2+2=4), return clean, direct output
+                    if len(display_expr.split()) <= 4 and not any(k in q_clean.lower() for k in ['step', 'prove', 'method']):
+                        if lang == 'roman_urdu':
+                            return f"**Hisaab (Result):**\n`{display_expr} = {result:g}`"
+                        else:
+                            return f"**Result:**\n`{display_expr} = {result:g}`"
+
+                    if lang == 'roman_urdu':
+                        return (
+                            f"### 🧮 **Mathematical Hisaab (Calculation):**\n\n"
+                            f"**Expression:** `{display_expr}`\n\n"
+                            f"**Step-by-Step Calculation:**\n"
+                            f"Order of Operations (BODMAS/PEMDAS) k mutabiq hisaab kiya gaya:\n"
+                            f"$$ {display_expr} = {result:g} $$\n\n"
+                            f"✅ **Final Answer:** `{display_expr} = {result:g}`"
+                        )
+                    else:
+                        return (
+                            f"### 🧮 **Mathematical Calculation:**\n\n"
+                            f"**Expression:** `{display_expr}`\n\n"
+                            f"**Step-by-Step Calculation:**\n"
+                            f"Evaluated according to standard order of operations (PEMDAS/BODMAS):\n"
+                            f"$$ {display_expr} = {result:g} $$\n\n"
+                            f"✅ **Final Result:** `{display_expr} = {result:g}`"
+                        )
+                except Exception:
+                    pass
+
+        # 2. Linear Equation in one variable: e.g. "2x + 5 = 15", "solve 3x - 9 = 21", "5x = 25"
         lin_match = re.search(r'([+-]?\s*\d*\.?\d*)\s*([a-zA-Z])\s*([+-]\s*\d+\.?\d*)?\s*=\s*([+-]?\s*\d+\.?\d*)', q_clean)
         if lin_match and ('=' in q_clean):
             try:
@@ -50,7 +101,7 @@ class UniversalProblemSolver:
                         f"### 🧮 **Linear Equation ka Step-by-Step Hal:**\n\n"
                         f"**Diya gaya Masla (Given Equation):**\n"
                         f"$$\\mathbf{{{lin_match.group(0).strip()}}}$$\n\n"
-                        f"**Step 1: Constant term ko barabar k doosri taraf le jayein:**\n"
+                        f"**Step 1: Constant term ko doosri taraf shift karein:**\n"
                         f"$$ {a}{var_name} = {c} - ({b}) $$\n"
                         f"$$ {a}{var_name} = {rhs_step} $$\n\n"
                         f"**Step 2: Dono taraf `{a}` se divide karein:**\n"
@@ -63,7 +114,7 @@ class UniversalProblemSolver:
                         f"### 🧮 **Step-by-Step Mathematical Solution:**\n\n"
                         f"**Given Equation:**\n"
                         f"$$\\mathbf{{{lin_match.group(0).strip()}}}$$\n\n"
-                        f"**Step 1: Isolate the variable term on the left side:**\n"
+                        f"**Step 1: Isolate the variable term:**\n"
                         f"$$ {a}{var_name} = {c} - ({b}) $$\n"
                         f"$$ {a}{var_name} = {rhs_step} $$\n\n"
                         f"**Step 2: Divide both sides by the coefficient `{a}`:**\n"
@@ -74,7 +125,7 @@ class UniversalProblemSolver:
             except Exception:
                 pass
 
-        # 2. Quadratic Equation: e.g. "x^2 - 5x + 6 = 0", "2x^2 + 4x - 6 = 0"
+        # 3. Quadratic Equation: e.g. "x^2 - 5x + 6 = 0", "2x^2 + 4x - 6 = 0"
         quad_match = re.search(r'([+-]?\s*\d*\.?\d*)\s*([a-zA-Z])\^2\s*([+-]\s*\d*\.?\d*)\s*\2\s*([+-]\s*\d+\.?\d*)?\s*=\s*0', q_clean)
         if quad_match:
             try:
@@ -87,7 +138,6 @@ class UniversalProblemSolver:
                 b = float(b_str) if b_str and b_str not in ['+', '-'] else (-1.0 if b_str == '-' else 1.0)
                 c = float(c_str)
 
-                # Discriminant: D = b^2 - 4ac
                 disc = (b ** 2) - (4 * a * c)
 
                 if disc >= 0:
@@ -107,7 +157,7 @@ class UniversalProblemSolver:
                         f"**Formulas:** $a = {a}, \\; b = {b}, \\; c = {c}$\n\n"
                         f"**Step 1: Discriminant ($D = b^2 - 4ac$) maloom karein:**\n"
                         f"$$ D = ({b})^2 - 4({a})({c}) = {disc} $$\n\n"
-                        f"**Step 2: Quadratic Formula istemal karein:**\n"
+                        f"**Step 2: Quadratic Formula apply karein:**\n"
                         f"$$ {var_name} = \\frac{{-b \\pm \\sqrt{{D}}}}{{2a}} = \\frac{{-({b}) \\pm \\sqrt{{{disc}}}}}{{2({a})}} $$\n\n"
                         f"✅ **Final Roots (Jawab):**\n"
                         f"$$ \\mathbf{{{roots_text}}} $$"
@@ -124,35 +174,6 @@ class UniversalProblemSolver:
                         f"$$ {var_name} = \\frac{{-b \\pm \\sqrt{{D}}}}{{2a}} = \\frac{{-({b}) \\pm \\sqrt{{{disc}}}}}{{2({a})}} $$\n\n"
                         f"✅ **Roots:**\n"
                         f"$$ \\mathbf{{{roots_text}}} $$"
-                    )
-            except Exception:
-                pass
-
-        # 3. Arithmetic & Power Calculations: e.g. "(50 * 4) / 2 + 15", "sqrt(144) + 2^5"
-        math_expr = re.sub(r'^(?:solve|calculate|what is|find|kitna hota hai|jawab btao)?\s*', '', q_clean, flags=re.I).strip()
-        math_expr = math_expr.rstrip('?').replace('^', '**').replace('sqrt', 'math.sqrt')
-
-        if bool(re.search(r'[0-9]', math_expr)) and any(op in math_expr for op in ['+', '-', '*', '/', '%', '**', 'math.sqrt']):
-            try:
-                allowed_names = {'math': math, 'sqrt': math.sqrt, 'sin': math.sin, 'cos': math.cos, 'tan': math.tan, 'pi': math.pi}
-                result = eval(math_expr, {"__builtins__": None}, allowed_names)
-                expr_display = math_expr.replace('math.', '').replace('**', '^')
-
-                if lang == 'roman_urdu':
-                    return (
-                        f"### 🧮 **Mathematical Hisaab (Calculation):**\n\n"
-                        f"**Expression:** `{expr_display}`\n\n"
-                        f"**Step-by-Step:**\n"
-                        f"Expression ko BODMAS / Order of Operations k mutabiq calculate kiya gaya.\n\n"
-                        f"✅ **Final Answer:** ` = {result:g}`"
-                    )
-                else:
-                    return (
-                        f"### 🧮 **Mathematical Calculation:**\n\n"
-                        f"**Expression:** `{expr_display}`\n\n"
-                        f"**Calculation Steps:**\n"
-                        f"Evaluated according to standard algebraic order of operations (PEMDAS/BODMAS).\n\n"
-                        f"✅ **Result:** `{expr_display} = {result:g}`"
                     )
             except Exception:
                 pass
