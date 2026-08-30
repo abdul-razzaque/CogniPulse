@@ -153,17 +153,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================
   // 2. Chat Message Flow & Thought Accordion
   // ==========================================
-  async function handleSendMessage() {
-    const text = chatInput.value.trim();
+  async function handleSendMessage(overrideText = null) {
+    const text = overrideText !== null ? overrideText.trim() : chatInput.value.trim();
     if (!text) return;
 
     // Hide hero welcome
     heroWelcome.style.display = 'none';
 
-    // Append User Bubble
-    appendUserMessage(text);
-    chatInput.value = '';
-    chatInput.style.height = 'auto';
+    // Append User Bubble with Edit / Copy / Retry controls
+    if (overrideText === null) {
+      appendUserMessage(text);
+      chatInput.value = '';
+      chatInput.style.height = 'auto';
+    }
 
     // Add Thinking Placeholder
     const thinkingRow = appendThinkingPlaceholder();
@@ -204,10 +206,99 @@ document.addEventListener('DOMContentLoaded', () => {
   function appendUserMessage(content) {
     const row = document.createElement('div');
     row.className = 'chat-row-user';
-    row.innerHTML = `<div class="user-bubble">${escapeHtml(content).replace(/\n/g, '<br/>')}</div>`;
+
+    row.innerHTML = `
+      <div class="user-bubble">${escapeHtml(content).replace(/\n/g, '<br/>')}</div>
+      <div class="user-actions-bar">
+        <button class="btn-user-action btn-edit-msg" title="Edit Question">
+          <i data-lucide="edit-3"></i> Edit
+        </button>
+        <button class="btn-user-action btn-retry-msg" title="Ask Again / Re-question">
+          <i data-lucide="rotate-cw"></i> Ask Again
+        </button>
+        <button class="btn-user-action btn-copy-user-msg" title="Copy Question">
+          <i data-lucide="copy"></i> Copy
+        </button>
+      </div>
+    `;
+
     messagesList.appendChild(row);
+    if (window.lucide) lucide.createIcons();
     scrollToBottom();
+
+    // 1. Copy User Message
+    const btnCopy = row.querySelector('.btn-copy-user-msg');
+    if (btnCopy) {
+      btnCopy.addEventListener('click', () => {
+        navigator.clipboard.writeText(content);
+        btnCopy.innerHTML = `<i data-lucide="check"></i> Copied`;
+        if (window.lucide) lucide.createIcons();
+        setTimeout(() => {
+          btnCopy.innerHTML = `<i data-lucide="copy"></i> Copy`;
+          if (window.lucide) lucide.createIcons();
+        }, 1500);
+      });
+    }
+
+    // 2. Retry / Re-question
+    const btnRetry = row.querySelector('.btn-retry-msg');
+    if (btnRetry) {
+      btnRetry.addEventListener('click', () => {
+        handleSendMessage(content);
+      });
+    }
+
+    // 3. Inline Edit
+    const btnEdit = row.querySelector('.btn-edit-msg');
+    const userBubble = row.querySelector('.user-bubble');
+    const actionsBar = row.querySelector('.user-actions-bar');
+
+    if (btnEdit) {
+      btnEdit.addEventListener('click', () => {
+        userBubble.style.display = 'none';
+        actionsBar.style.display = 'none';
+
+        const editBox = document.createElement('div');
+        editBox.className = 'user-inline-edit-box';
+        editBox.innerHTML = `
+          <textarea rows="2">${escapeHtml(content)}</textarea>
+          <div class="user-inline-edit-actions">
+            <button class="btn-inline-cancel">Cancel</button>
+            <button class="btn-inline-save">Save & Submit</button>
+          </div>
+        `;
+
+        row.prepend(editBox);
+        const editArea = editBox.querySelector('textarea');
+        editArea.focus();
+        editArea.setSelectionRange(editArea.value.length, editArea.value.length);
+
+        const btnCancel = editBox.querySelector('.btn-inline-cancel');
+        const btnSave = editBox.querySelector('.btn-inline-save');
+
+        btnCancel.addEventListener('click', () => {
+          editBox.remove();
+          userBubble.style.display = 'block';
+          actionsBar.style.display = 'flex';
+        });
+
+        btnSave.addEventListener('click', () => {
+          const newContent = editArea.value.trim();
+          if (!newContent) return;
+
+          content = newContent;
+          userBubble.innerHTML = escapeHtml(newContent).replace(/\n/g, '<br/>');
+          editBox.remove();
+          userBubble.style.display = 'block';
+          actionsBar.style.display = 'flex';
+
+          // Resubmit edited question to CogniPulse
+          handleSendMessage(newContent);
+        });
+      });
+    }
   }
+
 
   function appendThinkingPlaceholder() {
     const row = document.createElement('div');
