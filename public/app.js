@@ -675,17 +675,59 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function formatMarkdown(text) {
+    if (!text) return '';
     let t = escapeHtml(text);
-    // Bold
+
+    // 1. Code blocks (```lang ... ```)
+    t = t.replace(/```([a-zA-Z0-9_\-]*)?\n([\s\S]*?)```/g, (match, lang, code) => {
+      return `<pre class="code-block-wrap"><code class="lang-${lang || 'text'}">${code.trim()}</code></pre>`;
+    });
+
+    // 2. Inline code (`code`)
+    t = t.replace(/`([^`\n]+)`/g, '<code class="inline-code">$1</code>');
+
+    // 3. Headings (###, ##, #)
+    t = t.replace(/^###\s+(.*?)$/gm, '<h3 class="md-h3">$1</h3>');
+    t = t.replace(/^##\s+(.*?)$/gm, '<h2 class="md-h2">$1</h2>');
+    t = t.replace(/^#\s+(.*?)$/gm, '<h1 class="md-h1">$1</h1>');
+
+    // 4. Blockquotes (> quote)
+    t = t.replace(/^>\s+(.*?)$/gm, '<blockquote class="md-quote">$1</blockquote>');
+
+    // 5. Bold & Italic
     t = t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    // Italic
     t = t.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    // Blockquote
-    t = t.replace(/^>\s*(.*?)$/gm, '<blockquote>$1</blockquote>');
-    // Linebreaks
-    t = t.replace(/\n/g, '<br/>');
+
+    // 6. Bullet lists (• item or - item or * item)
+    t = t.replace(/^[•\-\*]\s+(.*?)$/gm, '<li class="md-li">$1</li>');
+    t = t.replace(/(<li class="md-li">[\s\S]*?<\/li>)/g, (match) => {
+      return `<ul class="md-ul">${match}</ul>`;
+    });
+    // Merge adjacent <ul> tags
+    t = t.replace(/<\/ul>\s*<ul class="md-ul">/g, '');
+
+    // 7. Numbered lists (1. item, 2. item)
+    t = t.replace(/^\d+\.\s+(.*?)$/gm, '<li class="md-oli">$1</li>');
+    t = t.replace(/(<li class="md-oli">[\s\S]*?<\/li>)/g, (match) => {
+      return `<ol class="md-ol">${match}</ol>`;
+    });
+    // Merge adjacent <ol> tags
+    t = t.replace(/<\/ol>\s*<ol class="md-ol">/g, '');
+
+    // 8. Paragraphs and spacing (Replace double newlines with paragraphs)
+    const blocks = t.split(/\n{2,}/);
+    t = blocks.map(b => {
+      b = b.trim();
+      if (!b) return '';
+      if (b.startsWith('<h') || b.startsWith('<pre') || b.startsWith('<ul') || b.startsWith('<ol') || b.startsWith('<blockquote')) {
+        return b;
+      }
+      return `<p class="md-p">${b.replace(/\n/g, '<br/>')}</p>`;
+    }).join('');
+
     return t;
   }
+
 
   // ==========================================
   // 3. Modals: Teach & Ingestion & Correction
