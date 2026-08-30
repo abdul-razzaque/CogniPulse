@@ -65,44 +65,41 @@ class CogniPulseBrain:
         query_clean = user_query.strip()
         thought_stream = []
 
-        # Step 1: Multilingual Detection & Intent Normalization
+        # Step 1: Multilingual Detection & Semantic Subject Extraction
         detected_lang = self.multilingual.detect_language(query_clean)
-        normalized_query = self.multilingual.normalize_romanized_query(query_clean)
+        core_subject = self.multilingual.extract_core_subject(query_clean)
 
         thought_stream.append({
             "stage": "PERCEPTION",
-            "message": f"Language: {detected_lang.upper().replace('_', ' ')} | Normalized Intent: '{normalized_query}'",
+            "message": f"Language: {detected_lang.upper().replace('_', ' ')} | Core Subject: '{core_subject}'",
             "timestamp": time.time()
         })
 
+        # Step 2: Associative Memory Recall (Filtered: Only factual & user-taught nodes)
+        all_recalled = self.memory.recall(core_subject, top_k=5, threshold=0.25)
+        recalled = [(node, score) for node, score in all_recalled if node.category in ["fact", "user_taught", "correction"]]
 
-        # Step 2: Associative Memory Recall (Filtered: Only factual & user-taught nodes, NOT raw interaction logs)
-        all_recalled = self.memory.recall(query_clean, top_k=5, threshold=0.15)
-        # Filter out interaction logs so we don't repeat old questions
-        recalled = [(node, score) for node, score in all_recalled if node.category in ["fact", "rule", "correction", "user_taught"]]
+        if recalled:
+            thought_stream.append({
+                "stage": "MEMORY_RECALL",
+                "message": f"Retrieved {len(recalled)} resonant neural memory traces for '{core_subject}'",
+                "details": [f"Trace: {node.content[:60]}... (Score: {score:.2f})" for node, score in recalled[:3]],
+                "timestamp": time.time()
+            })
 
-        recalled_contexts = [f"• {node.content[:80]} (Synapse: {node.synaptic_weight:.2f})" for node, score in recalled]
-        
-        thought_stream.append({
-            "stage": "MEMORY_RECALL",
-            "message": f"Activated {len(recalled)} associative memory clusters via Hebbian resonance.",
-            "details": recalled_contexts,
-            "timestamp": time.time()
-        })
+        # Step 3: Subgraph Activation in Knowledge Graph
+        subgraph = self.kg.query_subgraph(core_subject)
+        if subgraph.get("nodes"):
+            thought_stream.append({
+                "stage": "GRAPH_ACTIVATION",
+                "message": f"Activated {len(subgraph['nodes'])} conceptual entities in knowledge graph",
+                "details": [f"Entity: {n.get('name', '')} (Occurrences: {n.get('occurrences', 1)})" for n in subgraph['nodes'][:4]],
+                "timestamp": time.time()
+            })
 
-        # Step 3: Knowledge Graph Exploration
-        subgraph = self.kg.query_subgraph(query_clean)
-        kg_relations = [f"{e['source']} ➔ [{e['relation']}] ➔ {e['target']}" for e in subgraph.get("edges", [])[:4]]
-        
-        thought_stream.append({
-            "stage": "GRAPH_REASONING",
-            "message": f"Traversed dynamic knowledge graph; retrieved {len(subgraph.get('nodes', []))} concept nodes.",
-            "details": kg_relations,
-            "timestamp": time.time()
-        })
 
         # Step 4: Live Web Search & Knowledge Synthesis
-        raw_response, search_info = self._synthesize_with_live_search(normalized_query, recalled, subgraph)
+        raw_response, search_info = self._synthesize_with_live_search(core_subject, recalled, subgraph)
 
         # Translate/Mirror response into user's detected language / script
         response_text = self.multilingual.translate_response_to_target_language(raw_response, detected_lang)
@@ -110,7 +107,7 @@ class CogniPulseBrain:
         if search_info:
             thought_stream.append({
                 "stage": "WEB_RETRIEVAL",
-                "message": f"Retrieved ground truth from {search_info.get('source', 'Live Web')}: '{search_info.get('title', '')}'",
+                "message": f"Retrieved ground truth for '{core_subject}' from {search_info.get('source', 'Live Web')}: '{search_info.get('title', '')}'",
                 "details": [f"Source: {search_info.get('source', '')}", f"Summary: {search_info.get('summary', '')[:120]}..."],
                 "timestamp": time.time()
             })
