@@ -86,8 +86,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalFactCategory = document.getElementById('modalFactCategory');
 
   // ==========================================
-  // 2. Sidebar & Navigation Logic
+  // 2. Sidebar & Mobile Navigation Logic
   // ==========================================
+  let mobileBackdrop = document.querySelector('.mobile-sidebar-backdrop');
+  if (!mobileBackdrop) {
+    mobileBackdrop = document.createElement('div');
+    mobileBackdrop.className = 'mobile-sidebar-backdrop';
+    document.body.appendChild(mobileBackdrop);
+  }
+
+  function openMobileSidebar() {
+    sidebar.classList.add('mobile-open');
+    mobileBackdrop.classList.add('active');
+  }
+
+  function closeMobileSidebar() {
+    sidebar.classList.remove('mobile-open');
+    mobileBackdrop.classList.remove('active');
+  }
+
   if (btnToggleSidebar) {
     btnToggleSidebar.addEventListener('click', () => {
       sidebar.classList.toggle('collapsed');
@@ -96,13 +113,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (btnOpenSidebarMobile) {
     btnOpenSidebarMobile.addEventListener('click', () => {
-      sidebar.classList.toggle('collapsed');
+      if (sidebar.classList.contains('mobile-open')) {
+        closeMobileSidebar();
+      } else {
+        openMobileSidebar();
+      }
     });
   }
 
+  mobileBackdrop.addEventListener('click', closeMobileSidebar);
+
   navItems.forEach(item => {
     item.addEventListener('click', () => {
+      closeMobileSidebar();
       const targetView = item.getAttribute('data-view');
+
       navItems.forEach(n => n.classList.remove('active'));
       item.classList.add('active');
 
@@ -218,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     conversationsList.querySelectorAll('.conversation-item').forEach(item => {
       item.addEventListener('click', (e) => {
         if (e.target.closest('.conv-delete-btn')) return;
+        closeMobileSidebar();
         const id = item.getAttribute('data-id');
         activeConvId = id;
         saveConversations();
@@ -225,6 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadActiveConversation();
       });
     });
+
 
     conversationsList.querySelectorAll('.conv-delete-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
