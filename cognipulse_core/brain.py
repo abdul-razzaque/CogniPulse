@@ -115,32 +115,34 @@ class CogniPulseBrain:
             "timestamp": time.time()
         })
 
-        # Step 1.5: Mathematical Equation or Direct Problem Solver
+        # Step 1.5: Direct Arithmetic & Simple Math Solver
         if self.problem_solver.can_solve_math(query_clean):
-            math_res = self.problem_solver.solve_math(query_clean, lang=detected_lang)
-            if math_res:
-                thought_stream.append({
-                    "stage": "MATHEMATICAL_PROOF",
-                    "message": "Computed exact algebraic / arithmetic step-by-step solution.",
-                    "timestamp": time.time()
-                })
-                latency_ms = int((time.time() - t0) * 1000)
-                return {
-                    "query": query_clean,
-                    "response": math_res,
-                    "sources": [],
-                    "thought_stream": thought_stream,
-                    "recalled_memories": [],
-                    "graph_context": {},
-                    "latency_ms": latency_ms,
-                    "firing_event": {
-                        "query": "Math Solver",
-                        "activated_memories": [],
-                        "activated_nodes": [],
-                        "latency_ms": latency_ms,
+            if not any(k in query_clean.lower() for k in ['dy/dx', 'integral', 'derivative', 'differential', 'limit', 'matrix', 'vector', 'proof', 'prove', 'step by step', 'explain']):
+                math_res = self.problem_solver.solve_math(query_clean, lang=detected_lang)
+                if math_res:
+                    thought_stream.append({
+                        "stage": "MATHEMATICAL_PROOF",
+                        "message": "Computed exact arithmetic / algebraic solution.",
                         "timestamp": time.time()
+                    })
+                    latency_ms = int((time.time() - t0) * 1000)
+                    return {
+                        "query": query_clean,
+                        "response": math_res,
+                        "sources": [],
+                        "thought_stream": thought_stream,
+                        "recalled_memories": [],
+                        "graph_context": {},
+                        "latency_ms": latency_ms,
+                        "firing_event": {
+                            "query": "Math Solver",
+                            "activated_memories": [],
+                            "activated_nodes": [],
+                            "latency_ms": latency_ms,
+                            "timestamp": time.time()
+                        }
                     }
-                }
+
 
         # Step 2: Associative Memory Recall (Filtered: Only factual & user-taught nodes)
         all_recalled = self.memory.recall(core_subject, top_k=5, threshold=0.25)
